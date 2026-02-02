@@ -1,0 +1,12 @@
+
+.catalog-container { padding: 1rem; max-width: 1200px; margin: 0 auto; }
+.toolbar { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.filters { display: flex; gap: 1rem; align-items: center; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.loading, .empty { padding: 1rem; }
+.pagination { margin-top: 1rem; display: flex; justify-content: center; }

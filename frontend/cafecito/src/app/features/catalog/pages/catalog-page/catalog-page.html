@@ -1,0 +1,31 @@
+
+<section class="catalog-container">
+  <header class="toolbar">
+    <app-search-bar (search)="onSearch($event)"></app-search-bar>
+
+    <div class="filters">
+      <label>
+        Categoría:
+        <select [(ngModel)]="categoria" (change)="onCategoryChange(categoria)">
+          <option value="">Todas</option>
+          <option *ngFor="let c of categorias" [value]="c">{{ c }}</option>
+        </select>
+      </label>
+
+      <app-price-range (changeRange)="onPriceChange($event)"></app-price-range>
+
+      <button (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+  </header>
+
+  <div *ngIf="cargando" class="loading">Cargando productos...</div>
+  <div *ngIf="!cargando && productos.length === 0" class="empty">No se encontraron productos.</div>
+
+  <div class="grid">
+    <app-product-card *ngFor="let p of productos" [producto]="p"></app-product-card>
+  </div>
+
+  <footer class="pagination" *ngIf="totalPages > 1">
+    <app-paginator [page]="page" [totalPages]="totalPages" (changePage)="onPageChange($event)"></app-paginator>
+  </footer>
+</section>

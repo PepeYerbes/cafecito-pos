@@ -1,0 +1,8 @@
+
+<nav class="pager">
+  <button (click)="prev()" [disabled]="page === 1">«</button>
+  <button *ngFor="let p of pages()" [class.active]="p === page" (click)="goto(p)">
+    {{ p }}
+  </button>
+  <button (click)="next()" [disabled]="page === totalPages">»</button>
+</nav>

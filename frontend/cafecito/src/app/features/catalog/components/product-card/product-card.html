@@ -1,0 +1,13 @@
+
+<article class="card">
+  <div class="card-body">
+    <h3 class="title">{{ producto.nombre }}</h3>
+    <p class="code">Código: {{ producto.codigo }}</p>
+    <p class="category">Categoría: {{ producto.categoria }}</p>
+    <p class="price">$ {{ producto.precio | number:'1.0-2' }}</p>
+    <p class="stock" [class.low]="producto.stock <= 5">Stock: {{ producto.stock }}</p>
+  </div>
+  <div class="card-actions">
+    <button disabled>Agregar</button>
+  </div>
+</article>
