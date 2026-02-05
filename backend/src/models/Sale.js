@@ -1,29 +1,36 @@
+import mongoose from 'mongoose';
 
-const mongoose = require('mongoose');
+const SaleItemSchema = new mongoose.Schema({
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  name: String,
+  quantity: { type: Number, required: true },
+  unitPrice: { type: Number, required: true },
+  taxRate: { type: Number, default: 0.16 },
+  subtotal: { type: Number, required: true }, // unitPrice*qty (sin IVA)
+  tax: { type: Number, required: true },      // subtotal*taxRate
+  total: { type: Number, required: true }     // subtotal+tax (SIN descuento)
+}, { _id: false });
 
-const saleItemSchema = new mongoose.Schema(
-  {
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-    name: { type: String, required: true },
-    quantity: { type: Number, required: true, min: 1 },
-    unitPrice: { type: Number, required: true, min: 0 },
-    lineSubtotal: { type: Number, required: true, min: 0 },
+const SaleSchema = new mongoose.Schema({
+  sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'CashSession', required: true },
+  userId: String,
+
+  items: [SaleItemSchema],
+
+  gross: Number,      // suma subtotales (sin IVA)
+  taxes: Number,      // suma IVA
+  discount: { type: Number, default: 0 },  // ✅ nuevo
+  total: Number,      // gross + taxes - discount
+
+  notes: { type: String, default: '' },    // ✅ nuevo
+
+  paidWith: { type: String, enum: ['CASH','CARD','MIXED'], required: true },
+  status: {
+    type: String,
+    enum: ['COMPLETED','CANCELLED','REFUNDED_PARTIAL','REFUNDED_FULL'],
+    default: 'COMPLETED'
   },
-  { _id: true }
-);
+  createdAt: { type: Date, default: Date.now }
+}, { timestamps: true });
 
-const saleSchema = new mongoose.Schema(
-  {
-    customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
-    vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // lo usaremos en Día 6
-    status: { type: String, enum: ['OPEN', 'PAID', 'VOIDED', 'REFUNDED'], default: 'OPEN' },
-    items: { type: [saleItemSchema], default: [] },
-    subtotal: { type: Number, default: 0 },
-    discountPercent: { type: Number, default: 0 },
-    discountAmount: { type: Number, default: 0 },
-    total: { type: Number, default: 0 },
-  },
-  { timestamps: true }
-);
-
-module.exports = mongoose.model('Sale', saleSchema);
+export default mongoose.model('Sale', SaleSchema);

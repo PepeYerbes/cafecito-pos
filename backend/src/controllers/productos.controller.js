@@ -1,5 +1,4 @@
-
-const Producto = require('../models/producto.model');
+const Producto = require('../models/Product');
 
 // Utilidad para parsear números con defaults
 const toInt = (v, d) => (Number.isNaN(parseInt(v, 10)) ? d : parseInt(v, 10));
@@ -104,4 +103,3 @@ exports.eliminar = async (req, res) => {
     res.status(400).json({ message: 'Error al eliminar', error: err.message });
   }
 };
-``

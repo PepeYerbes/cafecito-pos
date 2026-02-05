@@ -9,6 +9,7 @@ export interface Producto {
   activo: boolean;
   createdAt?: string;
   updatedAt?: string;
+  taxRate?: number;
 }
 
 export interface ProductosResponse {

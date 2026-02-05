@@ -1,0 +1,25 @@
+.container { padding: 16px; max-width: 960px; margin: 0 auto; display: grid; gap: 12px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; display: grid; gap: 10px; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.row { display: flex; align-items: center; justify-content: space-between; }
+.total .money { font-weight: 800; }
+.money { font-weight: 700; color: #111827; }
+.badge { padding: 4px 8px; border-radius: 999px; font-size: 12px; text-align: center; border: 1px solid #d1d5db; }
+.badge.closed { background: #eef2ff; color: #1e3a8a; border-color: #6366f1; }
+.muted { color: #6b7280; font-size: 12px; }
+.payments { display: grid; gap: 8px; }
+.pay { display: flex; align-items: center; gap: 10px; }
+.mov-list { display: grid; gap: 8px; }
+.mov { display: grid; grid-template-columns: 100px 160px 1fr 160px; gap: 8px; align-items: center; }
+.badge.income { background: #ecfdf5; color: #065f46; border-color: #10b981; }
+.badge.expense { background: #fef2f2; color: #991b1b; border-color: #ef4444; }
+.amount { font-weight: 700; color: #111827; }
+.actions { display: flex; justify-content: flex-end; }
+.primary {
+  background: #111827; color: #fff; padding: 10px 12px; border: none; border-radius: 8px; cursor: pointer;
+}
+.neg { color: #b91c1c; }
+.pos { color: #065f46; }
+.link { color: #2563eb; text-decoration: none; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }

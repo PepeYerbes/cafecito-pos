@@ -1,0 +1,66 @@
+<section class="layout">
+  <!-- Mini menú lateral -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo">☕</span>
+      <div class="title">
+        <div class="name">POS</div>
+        <small class="muted">Caja y Ventas</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a routerLink="/pos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        🧾 Punto de venta
+      </a>
+      <a routerLink="/pos/open-shift" routerLinkActive="active">🔓 Abrir caja</a>
+      <a routerLink="/pos/close-shift" routerLinkActive="active">🔒 Cerrar caja</a>
+      <a routerLink="/catalogo" routerLinkActive="active">🗂️ Catálogo</a>
+      <a routerLink="/config" routerLinkActive="active">⚙️ Configuración</a>
+    </nav>
+
+    <div class="session">
+      <ng-container *ngIf="!loadingCash(); else loadingTpl">
+        <div *ngIf="hasOpenSession(); else closedTpl" class="badge open">Caja abierta</div>
+        <ng-template #closedTpl>
+          <div class="badge closed">Caja cerrada</div>
+        </ng-template>
+      </ng-container>
+
+      <div class="actions">
+        <button class="btn" (click)="goOpenShift()">Abrir</button>
+        <button class="btn outline" (click)="goCloseShift()">Cerrar</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Contenido principal -->
+  <main class="content">
+    <header class="topbar">
+      <h1>Punto de venta</h1>
+      <span class="muted" *ngIf="cash(); else noCash">Sesión activa</span>
+      <ng-template #noCash><span class="muted">Sin sesión</span></ng-template>
+    </header>
+
+    <div class="workspace">
+      <!-- Columna de productos -->
+      <section class="pane">
+        <!-- 🔽 Tu grid real de productos -->
+        <app-product-grid></app-product-grid>
+      </section>
+
+      <!-- Columna de carrito & totales -->
+      <section class="pane narrow">
+        <!-- 🔽 Tu carrito real -->
+        <app-cart></app-cart>
+
+        <!-- 🔽 Tus totales reales -->
+        <app-totals></app-totals>
+      </section>
+    </div>
+  </main>
+</section>
+
+<ng-template #loadingTpl>
+  <div class="muted">Verificando estado de caja…</div>
+</ng-template>

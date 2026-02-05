@@ -1,26 +1,24 @@
 {
-  "name": "backend",
+  "name": "pos-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/server.js",
+  "type": "module",
   "scripts": {
-    "dev": "node src/app.js",
-    "start": "node src/index.js",
-    "seed:productos": "node seed/productos.seed.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/seed.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.2.3",
-    "express": "^5.2.1",
-    "express-validator": "^7.3.1",
-    "mongoose": "^9.1.5",
-    "morgan": "^1.10.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.11"
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "get-stream": "^9.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.3.1",
+    "morgan": "^1.10.0",
+    "pdfkit": "^0.14.0",
+    "qrcode": "^1.5.3",
+    "uuid": "^9.0.1"
   }
 }

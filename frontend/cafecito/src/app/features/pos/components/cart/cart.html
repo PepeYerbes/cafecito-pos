@@ -1,0 +1,32 @@
+<section class="cart">
+  <header class="cart-header">
+    <h3>Carrito ({{ pos.totalItems() }})</h3>
+    <button class="clear" (click)="pos.clear()">Vaciar</button>
+  </header>
+
+  <div class="cart-list" *ngIf="pos.items().length; else empty">
+    <div
+      class="row"
+      *ngFor="let it of pos.items(); let i = index"
+      (click)="focusIndex(i)">
+      <div class="info">
+        <div class="name">{{ it.producto.nombre }}</div>
+        <div class="price">$ {{ it.producto.precio | number:'1.0-2' }}</div>
+      </div>
+      <div class="qty">
+        <button (click)="dec(it.producto._id)">−</button>
+        <input [value]="it.qty" (change)="directQty(it.producto._id, $any($event.target).value)">
+        <button (click)="inc(it.producto._id)">+</button>
+      </div>
+      <div class="total">
+        $ {{ (it.producto.precio * it.qty) | number:'1.0-2' }}
+      </div>
+      <button class="remove" (click)="remove(it.producto._id)">✕</button>
+    </div>
+  </div>
+
+  <ng-template #empty>
+    <div class="empty">Carrito vacío</div>
+  </ng-template>
+</section>
+``

@@ -1,0 +1,12 @@
+<div class="grid">
+  <button
+    class="item"
+    *ngFor="let p of productos"
+    (click)="add.emit(p)">
+    <div class="title">{{ p.nombre }}</div>
+    <div class="meta">
+      <span class="price">$ {{ p.precio | number:'1.0-2' }}</span>
+      <span class="stock" [class.low]="p.stock <= 5">Stock: {{ p.stock }}</span>
+    </div>
+  </button>
+</div>

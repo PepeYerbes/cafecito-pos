@@ -14,6 +14,7 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // Rutas
 app.use('/api/productos', require('./routes/productos.routes'));
+app.use('/api/ventas', require('./routes/sales'));
 
 const PORT = process.env.PORT || 3000;
 connectDB()

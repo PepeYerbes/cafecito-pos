@@ -1,0 +1,14 @@
+<section class="totals">
+  <div class="line">
+    <span>Artículos</span>
+    <strong>{{ pos.totalItems() }}</strong>
+  </div>
+  <div class="line">
+    <span>Subtotal</span>
+    <strong>$ {{ pos.subtotal() | number:'1.0-2' }}</strong>
+  </div>
+  <!-- IVA/Descuentos se agregarán en el módulo de ventas -->
+  <button class="checkout" [disabled]="pos.items().length === 0" (click)="checkout.emit()">
+    Cobrar
+  </button>
+</section>

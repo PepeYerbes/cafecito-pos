@@ -1,0 +1,33 @@
+<section class="container">
+  <header class="header">
+    <h2>Abrir caja</h2>
+    <a routerLink="/pos" class="link">← Volver</a>
+  </header>
+
+  <div class="card">
+    <label for="initial">Monto inicial</label>
+    <input
+      id="initial"
+      type="number"
+      [ngModel]="initialCash()"
+      (ngModelChange)="initialCash.set($event)"
+      min="0"
+      step="0.01"
+      inputmode="decimal"
+      placeholder="0.00"
+    />
+
+    <div class="preview">
+      <small>Previsualización:</small>
+      <div class="money">{{ initialCash() || 0 | currency:'MXN':'symbol' }}</div>
+    </div>
+
+    <button class="primary" (click)="open()" [disabled]="loading()">Abrir caja</button>
+    <p class="error" *ngIf="error()">{{ error() }}</p>
+
+    <div class="hint">
+      <small>¿Ya tienes una sesión abierta?</small>
+      <a routerLink="/pos/close-shift" class="link">Ir a cerrar caja</a>
+    </div>
+  </div>
+</section>

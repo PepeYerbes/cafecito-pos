@@ -1,0 +1,101 @@
+<section class="container" *ngIf="!loading(); else loadingTpl">
+  <header class="header">
+    <h2>Cerrar caja</h2>
+    <a routerLink="/pos" class="link">← Volver</a>
+  </header>
+
+  <ng-container *ngIf="shift() as s; else noShift">
+    <div class="grid">
+      <div class="card">
+        <h3>Resumen</h3>
+        <div class="row">
+          <span>Fecha apertura</span>
+          <span>{{ s.openedAt | date:'short' }}</span>
+        </div>
+        <div class="row">
+          <span>Monto inicial</span>
+          <span class="money">{{ s.initialCash | currency:'MXN' }}</span>
+        </div>
+        <div class="muted">Al cerrar, se calcularán totales, esperado y diferencia.</div>
+      </div>
+
+      <div class="card">
+        <h3>Conteo de efectivo</h3>
+        <label for="counted">Monto contado</label>
+        <input
+          id="counted"
+          type="number"
+          [ngModel]="countedCash()"
+          (ngModelChange)="countedCash.set($event)"
+          step="0.01"
+          min="0"
+          inputmode="decimal"
+        />
+
+        <label for="notes">Notas</label>
+        <textarea
+          id="notes"
+          rows="3"
+          [ngModel]="notes()"
+          (ngModelChange)="notes.set($event)"
+          placeholder="Observaciones del cierre (opcional)"
+        ></textarea>
+
+        <button class="primary" (click)="close()">Cerrar caja</button>
+        <p class="error" *ngIf="error()">{{ error() }}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Movimientos de caja</h3>
+      <div class="movements">
+        <select [ngModel]="movType()" (ngModelChange)="movType.set($event)">
+          <option value="INGRESO">INGRESO</option>
+          <option value="EGRESO">EGRESO</option>
+        </select>
+        <input
+          type="text"
+          placeholder="Motivo (opcional)"
+          [ngModel]="movReason()"
+          (ngModelChange)="movReason.set($event)"
+        />
+        <input
+          type="number"
+          placeholder="Monto"
+          [ngModel]="movAmount()"
+          (ngModelChange)="movAmount.set($event)"
+          step="0.01"
+          min="0"
+          inputmode="decimal"
+        />
+        <button class="secondary" (click)="addMovement()" [disabled]="movLoading()">Agregar</button>
+      </div>
+      <p class="error" *ngIf="movError()">{{ movError() }}</p>
+
+      <div class="mov-list" *ngIf="s.movements?.length; else emptyMovs">
+        <div class="mov" *ngFor="let m of s.movements">
+          <span class="badge" [class.income]="m.type==='INGRESO'" [class.expense]="m.type==='EGRESO'">{{ m.type }}</span>
+          <span class="amount">{{ m.amount | currency:'MXN' }}</span>
+          <span class="reason">{{ m.reason || '—' }}</span>
+          <span class="date">{{ m.createdAt | date:'short' }}</span>
+        </div>
+      </div>
+      <ng-template #emptyMovs>
+        <div class="muted">Sin movimientos registrados.</div>
+      </ng-template>
+    </div>
+  </ng-container>
+
+  <ng-template #noShift>
+    <div class="card">
+      <p class="error">No hay sesión abierta.</p>
+      <a routerLink="/pos/open-shift" class="primary">Abrir caja</a>
+    </div>
+  </ng-template>
+</section>
+
+<ng-template #loadingTpl>
+  <div class="container">
+    <div class="card">Cargando…</div>
+  </div>
+</ng-template>

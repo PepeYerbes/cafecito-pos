@@ -1,12 +1,45 @@
-
 import { Routes } from '@angular/router';
 
 export const APP_ROUTES: Routes = [
-  { path: '', redirectTo: 'catalogo', pathMatch: 'full' },
+  // Home → POS
+  { path: '', redirectTo: 'pos', pathMatch: 'full' },
+
+  // POS principal (tu página actual)
+  {
+    path: 'pos',
+    loadComponent: () =>
+      import('./features/pos/pages/pos-page/pos-page')
+        .then(m => m.PosPageComponent)
+  },
+
+  // --- Caja: abrir, cerrar, detalle de cierre ---
+  {
+    path: 'pos/open-shift',
+    loadComponent: () =>
+      import('./features/pos/pages/open-shift/open-shift/open-shift')
+        .then(m => m.OpenShiftPage)
+  },
+  {
+    path: 'pos/close-shift',
+    loadComponent: () =>
+      import('./features/pos/pages/close-shift/close-shift/close-shift')
+        .then(m => m.CloseShiftPage)
+  },
+  {
+    path: 'pos/shift-detail/:id',
+    loadComponent: () =>
+      import('./features/pos/pages/shift-detail/shift-detail/shift-detail')
+        .then(m => m.ShiftDetailPage)
+  },
+
+  // Catálogo (tu componente real)
   {
     path: 'catalogo',
-    loadChildren: () =>
-      import('./features/catalog/catalog.module').then(m => m.CatalogModule)
+    loadComponent: () =>
+      import('./features/catalog/pages/catalog-page/catalog-page')
+        .then(m => m.CatalogPageComponent)
   },
-  { path: '**', redirectTo: 'catalogo' }
+
+  // Catch-all
+  { path: '**', redirectTo: 'pos' }
 ];

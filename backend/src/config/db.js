@@ -1,14 +1,10 @@
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
-const mongoose = require('mongoose');
+dotenv.config();
 
-async function connectDB() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error('Falta MONGODB_URI en .env');
-  }
-  mongoose.set('strictQuery', true);
-  await mongoose.connect(uri, { dbName: process.env.MONGODB_DB || 'pos_cafeteria' });
-  console.log('✅ MongoDB conectado');
-}
+const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/pos';
+mongoose.connect(uri, { autoIndex: true });
 
-module.exports = connectDB;
+mongoose.connection.on('connected', () => console.log('MongoDB conectado'));
+mongoose.connection.on('error', (err) => console.error('MongoDB error', err));

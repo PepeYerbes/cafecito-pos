@@ -1,0 +1,22 @@
+<section class="keypad">
+  <div class="display">{{ buffer || '0' }}</div>
+  <div class="grid">
+    <button (click)="press('7')">7</button>
+    <button (click)="press('8')">8</button>
+    <button (click)="press('9')">9</button>
+
+    <button (click)="press('4')">4</button>
+    <button (click)="press('5')">5</button>
+    <button (click)="press('6')">6</button>
+
+    <button (click)="press('1')">1</button>
+    <button (click)="press('2')">2</button>
+    <button (click)="press('3')">3</button>
+
+    <button (click)="press('0')">0</button>
+    <button (click)="press('←')">←</button>
+    <button class="apply" (click)="apply()">Aplicar</button>
+
+    <button class="clear" (click)="press('C')">C</button>
+  </div>
+</section>

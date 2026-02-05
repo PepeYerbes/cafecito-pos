@@ -1,0 +1,12 @@
+.top-nav {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.top-nav a { text-decoration: none; color: #111827; font-weight: 600; }
+.top-nav a.active { color: #16a34a; }

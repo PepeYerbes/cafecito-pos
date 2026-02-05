@@ -1,0 +1,75 @@
+<section class="container" *ngIf="!loading(); else loadingTpl">
+  <header class="header">
+    <h2>Detalle de cierre</h2>
+    <a routerLink="/pos" class="link">← Volver</a>
+  </header>
+
+  <ng-container *ngIf="shift() as s; else errorTpl">
+    <div class="meta card">
+      <div>Folio: <b>{{ s._id }}</b></div>
+      <div>Apertura: <b>{{ s.openedAt | date:'short' }}</b></div>
+      <div *ngIf="s.closedAt">Cierre: <b>{{ s.closedAt | date:'short' }}</b></div>
+      <div>Status: <span class="badge" [ngClass]="{closed: s.status==='CLOSED'}">{{ s.status }}</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Totales de ventas</h3>
+        <div class="row"><span>Subtotal</span><span class="money">{{ s.totals?.gross || 0 | currency:'MXN' }}</span></div>
+        <div class="row"><span>IVA</span><span class="money">{{ s.totals?.taxes || 0 | currency:'MXN' }}</span></div>
+        <div class="row"><span>Descuento</span><span class="money">{{ s.totals?.discount || 0 | currency:'MXN' }}</span></div>
+        <div class="row total"><span>Total</span><span class="money">{{ s.totals?.total || 0 | currency:'MXN' }}</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Efectivo / Diferencia</h3>
+        <div class="row"><span>Inicial</span><span class="money">{{ s.initialCash | currency:'MXN' }}</span></div>
+        <div class="row"><span>Esperado</span><span class="money">{{ s.expectedCash || 0 | currency:'MXN' }}</span></div>
+        <div class="row"><span>Contado</span><span class="money">{{ s.countedCash || 0 | currency:'MXN' }}</span></div>
+        <div class="row total">
+          <span>Diferencia</span>
+          <span class="money" [ngClass]="{'neg': (s.difference||0) < 0, 'pos': (s.difference||0) > 0}">
+            {{ s.difference || 0 | currency:'MXN' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Formas de pago</h3>
+      <div class="payments" *ngIf="s.payments?.length; else noPayments">
+        <div class="pay" *ngFor="let p of s.payments">
+          <span class="badge">{{ p.method }}</span>
+          <span class="money">{{ p.total | currency:'MXN' }}</span>
+          <span class="muted">{{ p.count }} venta(s)</span>
+        </div>
+      </div>
+      <ng-template #noPayments><div class="muted">Sin registro de pagos.</div></ng-template>
+    </div>
+
+    <div class="card">
+      <h3>Movimientos de caja</h3>
+      <div class="mov-list" *ngIf="s.movements?.length; else noMovs">
+        <div class="mov" *ngFor="let m of s.movements">
+          <span class="badge" [ngClass]="{income: m.type==='INGRESO', expense: m.type==='EGRESO'}">{{ m.type }}</span>
+          <span class="amount">{{ m.amount | currency:'MXN' }}</span>
+          <span class="reason">{{ m.reason || '—' }}</span>
+          <span class="date">{{ m.createdAt | date:'short' }}</span>
+        </div>
+      </div>
+      <ng-template #noMovs><div class="muted">Sin movimientos.</div></ng-template>
+    </div>
+
+    <div class="actions">
+      <button class="primary" (click)="download()">Descargar PDF</button>
+    </div>
+  </ng-container>
+</section>
+
+<ng-template #loadingTpl>
+  <div class="container"><div class="card">Cargando…</div></div>
+</ng-template>
+
+<ng-template #errorTpl>
+  <div class="container"><div class="card error">{{ error() }}</div></div>
+</ng-template>
