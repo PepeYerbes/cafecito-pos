@@ -1,39 +1,84 @@
-
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+/* 1) SIEMPRE PRIMERO: @use */
 @use '@angular/material' as mat;
 
+/* 2) Paleta Cafecito Feliz como variables CSS */
+:root {
+  --ink-black: #04151f;
+  --dark-slate-grey: #183a37;
+  --wheat: #efd6ac;
+  --burnt-orange: #c44900;
+  --midnight-violet: #432534;
+
+  /* Derivados */
+  --bg-app: #f8f6f3;
+  --surface: #ffffff;
+  --text: var(--ink-black);
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: var(--midnight-violet);
+  --accent: var(--burnt-orange);
+  --success: #065f46;
+  --danger: #b91c1c;
+}
+
+/* 3) Theming Angular Material (puedes ajustar paletas “primary/tertiary”) */
 html {
   @include mat.theme((
     color: (
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
+      primary: (
+        50: #f0eef0, 100: #e0dce1, 200: #c2b9c3, 300: #a397a5, 400: #856487,
+        500: #432534, 600: #3b2130, 700: #331d2b, 800: #2b1926, 900: #231521,
+        contrast: (500: #fff)
+      ),
+      tertiary: (
+        50: #fff1ea, 100: #ffdccc, 200: #ffc7ad, 300: #ffb08c, 400: #ff9a6c,
+        500: #c44900, 600: #a83f00, 700: #8c3500, 800: #6f2a00, 900: #531f00,
+        contrast: (500: #fff)
+      )
     ),
     typography: Roboto,
-    density: 0,
+    density: 0
   ));
 }
 
+/* 4) Base global */
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
   color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
+  background-color: var(--bg-app);
+  color: var(--text);
   font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
   margin: 0;
 }
-/* You can add global styles to this file, and also import other style files */
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* 5) Utilidades de marca (clases globales que ya usas) */
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.btn.outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.link { color: var(--primary); text-decoration: none; }
+.muted { color: var(--muted); }

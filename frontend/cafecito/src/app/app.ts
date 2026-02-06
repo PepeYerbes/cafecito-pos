@@ -12,9 +12,16 @@ import { RouterOutlet } from '@angular/router';
       <router-outlet />
     </main>
   `,
-  styles: [`
-    .toolbar{padding:12px;background:#6d4c41;color:#fff;font-weight:600}
-    .container{padding:16px}
-  `]
+  
+styles: [`
+  .toolbar {
+    padding: 12px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+  }
+  .container { padding: 16px; }
+`]
+
 })
 export class AppComponent {}

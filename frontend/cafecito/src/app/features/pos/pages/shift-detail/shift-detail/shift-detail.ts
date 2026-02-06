@@ -29,6 +29,15 @@ export class ShiftDetailPage implements OnInit {
     });
   }
 
+  open() {
+  const id = this.id();
+  if (!id) return;
+  // El endpoint ya responde inline; abrirá en otra pestaña
+  const base = (window as any).ENV_API_BASE_URL || ''; // opcional si quieres inyectar dinámico
+  window.open(`${base}${base.endsWith('/api') ? '' : ''}/api/cash/register/${id}/report?format=pdf`, '_blank');
+}
+
+
   download() {
     const id = this.id();
     if (!id) return;

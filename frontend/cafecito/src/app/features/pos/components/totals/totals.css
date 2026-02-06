@@ -1,3 +1,4 @@
-.totals { border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.5rem; background: #fff; }
+.totals { border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem; background: #fff; }
 .line { display: flex; justify-content: space-between; margin: 0.25rem 0; }
-.checkout { width: 100%; margin-top: 0.5rem; background: #111827; color: #fff; padding: 0.5rem; border-radius: 6px; }
+.checkout { width: 100%; margin-top: 0.5rem; background: var(--primary); color: #fff; padding: 0.5rem; border-radius: 6px; }
+.checkout:disabled { opacity: 0.6; }

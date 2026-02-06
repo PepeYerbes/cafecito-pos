@@ -1,14 +1,16 @@
+// backend/src/seed.js
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import Product from './models/Product.js';
 
-require('dotenv').config();
-const mongoose = require('mongoose');
-const Producto = require('../src/models/producto.model');
+dotenv.config();
+
+const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/pos';
 
 async function run() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: process.env.MONGODB_DB || 'pos_cafeteria'
-    });
-    console.log('✅ Conectado para seed');
+    await mongoose.connect(uri, { autoIndex: true });
+    console.log('✅ Conectado a Mongo para seed');
 
     const base = [
       { nombre: 'Capuchino', precio: 45, categoria: 'Café',   codigo: 'CAF001', stock: 25, activo: true },
@@ -20,9 +22,23 @@ async function run() {
       { nombre: 'Cheesecake', precio: 48, categoria: 'Postre', codigo: 'POS002', stock: 8,  activo: true }
     ];
 
-    // Evitar duplicados por codigo
     for (const p of base) {
-      await Producto.updateOne({ codigo: p.codigo }, { $setOnInsert: p }, { upsert: true });
+      // Usa alias: Product aceptará nombre/codigo/precio/activo gracias al schema
+      await Product.updateOne(
+        { sku: p.codigo },
+        {
+          $setOnInsert: {
+            name: p.nombre,
+            sku: p.codigo,
+            price: p.precio,
+            categoria: p.categoria,
+            stock: p.stock,
+            active: p.activo,
+            taxRate: 0.16
+          }
+        },
+        { upsert: true }
+      );
     }
 
     console.log('🌱 Seed de productos listo');

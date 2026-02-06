@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middlewares/auth.js';
-import { requireopenCash } from '../middlewares/requireopenCash.js';
+import { requireopenCash } from '../middlewares/requireOpenCash.js';
 import Product from '../models/Product.js';
 import Sale from '../models/Sale.js';
 import Return from '../models/Return.js';

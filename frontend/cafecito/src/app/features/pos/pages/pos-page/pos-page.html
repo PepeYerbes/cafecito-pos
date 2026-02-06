@@ -45,16 +45,21 @@
     <div class="workspace">
       <!-- Columna de productos -->
       <section class="pane">
-        <!-- 🔽 Tu grid real de productos -->
-        <app-product-grid></app-product-grid>
+        <ng-container *ngIf="!loadingProducts(); else loadingTpl2">
+          <app-product-grid
+            [productos]="productos()"
+            (add)="addProduct($event)">
+          </app-product-grid>
+        </ng-container>
+
+        <ng-template #loadingTpl2>
+          <div class="muted">Cargando productos…</div>
+        </ng-template>
       </section>
 
       <!-- Columna de carrito & totales -->
       <section class="pane narrow">
-        <!-- 🔽 Tu carrito real -->
         <app-cart></app-cart>
-
-        <!-- 🔽 Tus totales reales -->
         <app-totals></app-totals>
       </section>
     </div>

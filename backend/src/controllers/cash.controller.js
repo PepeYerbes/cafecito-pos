@@ -1,3 +1,4 @@
+// backend/src/controllers/cash.controller.js
 import mongoose from 'mongoose';
 import CashSession from '../models/CashSession.js';
 import Sale from '../models/Sale.js';
@@ -16,7 +17,6 @@ const MIXED_CASH_POLICY = (process.env.MIXED_CASH_POLICY || 'IGNORE').toUpperCas
 /** Helpers */
 const toMoney = (n) => Number((Number(n || 0)).toFixed(2));
 const isNumber = (v) => typeof v === 'number' && !Number.isNaN(v) && Number.isFinite(v);
-
 const errorResponse = (res, code, message) => res.status(code).json({ message });
 
 /**
@@ -26,7 +26,7 @@ const errorResponse = (res, code, message) => res.status(code).json({ message })
 export const open = async (req, res) => {
   try {
     const { initialCash } = req.body;
-    const userId = req.user?.id || req.body.userId;
+    const userId = req.user?.id || req.body.userId || 'user-demo';
 
     if (!isNumber(initialCash) || initialCash < 0) {
       return errorResponse(res, 400, 'initialCash inválido (>= 0 requerido)');
@@ -35,10 +35,8 @@ export const open = async (req, res) => {
     const existing = await CashSession.findOne({ status: 'OPEN' });
     if (existing) return errorResponse(res, 400, 'Ya hay una sesión abierta');
 
-    const openedBy = userId ? new mongoose.Types.ObjectId(userId) : new mongoose.Types.ObjectId();
-
     const session = await CashSession.create({
-      openedBy,
+      userId,
       initialCash: toMoney(initialCash),
       status: 'OPEN',
       openedAt: new Date(),
@@ -104,7 +102,7 @@ export const movement = async (req, res) => {
 export const close = async (req, res) => {
   try {
     const { countedCash, notes } = req.body;
-    const userId = req.user?.id || req.body.userId;
+    const userId = req.user?.id || req.body.userId || 'user-demo';
 
     if (!isNumber(countedCash) || countedCash < 0) {
       return errorResponse(res, 400, 'countedCash inválido (>= 0 requerido)');
@@ -170,7 +168,7 @@ export const close = async (req, res) => {
     // Cerrar sesión
     s.status = 'CLOSED';
     s.closedAt = new Date();
-    s.closedBy = userId ? new mongoose.Types.ObjectId(userId) : new mongoose.Types.ObjectId();
+    s.closedBy = new mongoose.Types.ObjectId(); // demo
     s.countedCash = toMoney(countedCash);
     s.expectedCash = expectedCash;
     s.difference = difference;
@@ -209,10 +207,15 @@ export const report = async (req, res) => {
       return res.json(s);
     }
 
-    // PDF
-    const buffer = await buildSessionPdf(s);
+    // PDF con branding Cafecito Feliz
+    const buffer = await buildSessionPdf(s, {
+      company: { name: 'Cafecito Feliz', address: 'Sucursal única' },
+      branch: { name: s.branchName || 'Sucursal única' },
+      printedBy: req.user?.name || 'Sistema',
+      logoPath: 'public/assets/logo.png'
+    });
+
     res.setHeader('Content-Type', 'application/pdf');
-    // inline para ver en navegador; usa 'attachment' para forzar descarga
     res.setHeader('Content-Disposition', `inline; filename="cierre-${s._id}.pdf"`);
     return res.send(buffer);
   } catch (e) {

@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import './config/db.js';
 import cashRoutes from './routes/cash.js';
 import salesRoutes from './routes/sales.js';
+import productsRoutes from './routes/products.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.get('/api/health', (_, res) => res.json({ ok: true, time: new Date().toISOSt
 app.use('/api/cash', cashRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api', cashRoutes);
+app.use('/api/productos', productsRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Backend POS escuchando en :${PORT}`));

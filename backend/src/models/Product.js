@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 
 const ProductSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  sku: { type: String, index: true, unique: true },
-  price: { type: Number, required: true },        // precio unitario sin IVA o con IVA (define tu regla)
-  taxRate: { type: Number, default: 0.16 },        // IVA 16% por defecto
-  stock: { type: Number, default: 0 },
-  active: { type: Boolean, default: true }
+  name:      { type: String, required: true, alias: 'nombre' },
+  sku:       { type: String, index: true, unique: true, alias: 'codigo' },
+  price:     { type: Number, required: true, alias: 'precio' },
+  taxRate:   { type: Number, default: 0.16 },
+  stock:     { type: Number, default: 0 },
+  active:    { type: Boolean, default: true, alias: 'activo' },
+  categoria: { type: String, enum: ['Café', 'Té', 'Frappé', 'Postre', 'Snack', 'Otro'], default: 'Otro' }
 }, { timestamps: true });
 
 export default mongoose.model('Product', ProductSchema);
