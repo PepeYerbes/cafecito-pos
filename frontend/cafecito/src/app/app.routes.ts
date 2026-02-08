@@ -32,6 +32,14 @@ export const APP_ROUTES: Routes = [
         .then(m => m.ShiftDetailPage)
   },
 
+// Historial de cierres
+  {
+    path: 'pos/shift-history',
+    loadComponent: () =>
+      import('./features/pos/pages/shift-history/shift-history')
+        .then(m => m.ShiftHistoryPage)
+  },
+
   // Catálogo (tu componente real)
   {
     path: 'catalogo',

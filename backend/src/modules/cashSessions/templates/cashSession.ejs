@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cierre de Caja — <%= session._id %></title>
+  <style>
+    :root {
+      --dark: <%= brand.colors.dark %>;
+      --teal: <%= brand.colors.teal %>;
+      --sand: <%= brand.colors.sand %>;
+      --orange: <%= brand.colors.orange %>;
+      --plum: <%= brand.colors.plum %>;
+    }
+    body { font-family: Arial, sans-serif; color: var(--dark); font-size: 12px; }
+    .header { display:flex; align-items:center; gap:14px; border-bottom: 3px solid var(--orange); padding-bottom:8px; }
+    .brand { font-size: 18px; font-weight: bold; color: var(--plum); }
+    .muted { color: #555; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
+    .card h3 { margin: 0 0 6px; color: var(--teal); font-size: 14px; }
+    .row { display:flex; justify-content:space-between; margin: 3px 0; }
+    .highlight { background: var(--sand); padding: 6px; border-radius: 6px; }
+    .footer { margin-top: 16px; border-top: 1px dashed #aaa; padding-top: 8px; display:flex; justify-content:space-between; }
+    .sign { width: 45%; text-align:center; }
+    img.logo { height: 44px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #eee; padding: 4px; text-align: left; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img class="logo" src="file:///<%= brand.logoPath %>" alt="Logo"/>
+    <div>
+      <div class="brand"><%= brand.branchName || 'Cafecito Feliz' %> — Cierre de Caja</div>
+      <div class="muted">
+        Sesión: <%= session._id %>
+        • Usuario: <%= session.userId %>
+        • Apertura: <%= fmt(session.openedAt) %>
+        • Cierre: <%= session.closedAt ? fmt(session.closedAt) : '—' %>
+      </div>
+      <% if (session.shiftName) { %>
+        <div class="muted">Turno: <%= session.shiftName %></div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top: 10px;">
+    <div class="card">
+      <h3>Resumen de ventas</h3>
+      <div class="row"><div>Subtotal (gross)</div><div>$ <%= money(session.totals?.gross) %></div></div>
+      <div class="row"><div>IVA (taxes)</div><div>$ <%= money(session.totals?.taxes) %></div></div>
+      <div class="row"><div>Descuento</div><div>$ <%= money(session.totals?.discount) %></div></div>
+      <div class="row highlight"><div>Total</div><div><b>$ <%= money(session.totals?.total) %></b></div></div>
+    </div>
+    <div class="card">
+      <h3>Pagos por método</h3>
+      <% const pays = session.payments || []; %>
+      <div class="row"><div>EFECTIVO</div><div>$ <%= money((pays.find(p=>p.method==='CASH')||{}).total) %> ({{ (pays.find(p=>p.method==='CASH')||{}).count || 0 }})</div></div>
+      <div class="row"><div>TARJETA</div><div>$ <%= money((pays.find(p=>p.method==='CARD')||{}).total) %> ({{ (pays.find(p=>p.method==='CARD')||{}).count || 0 }})</div></div>
+      <div class="row"><div>MIXTO</div><div>$ <%= money((pays.find(p=>p.method==='MIXED')||{}).total) %> ({{ (pays.find(p=>p.method==='MIXED')||{}).count || 0 }})</div></div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top: 10px;">
+    <div class="card">
+      <h3>Caja</h3>
+      <div class="row"><div>Efectivo inicial</div><div>$ <%= money(session.initialCash) %></div></div>
+      <div class="row"><div>Entradas</div><div>$ <%= money((session.movements||[]).filter(m=>m.type==='IN').reduce((a,m)=>a+m.amount,0)) %></div></div>
+      <div class="row"><div>Salidas</div><div>$ <%= money((session.movements||[]).filter(m=>m.type==='OUT').reduce((a,m)=>a+m.amount,0)) %></div></div>
+      <div class="row"><div>Esperado</div><div>$ <%= money(session.expectedCash) %></div></div>
+      <div class="row"><div>Contado</div><div>$ <%= money(session.countedCash) %></div></div>
+      <div class="row highlight"><div>Diferencia</div><div><b>$ <%= money(session.difference) %></b></div></div>
+    </div>
+    <div class="card">
+      <h3>Devoluciones</h3>
+      <% /* Informativo: si quieres netear, lo hacemos en totales */ %>
+      <% const returns = session.returns || { count: 0, refundAmount: 0 }; %>
+      <div class="row"><div>Operaciones</div><div><%= returns.count || 0 %></div></div>
+      <div class="row"><div>Reembolsado</div><div>$ <%= money(returns.refundAmount || 0) %></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 10px;">
+    <h3>Movimientos de caja</h3>
+    <table>
+      <thead>
+        <tr><th>Fecha</th><th>Tipo</th><th>Motivo</th><th style="text-align:right">Monto</th></tr>
+      </thead>
+      <tbody>
+        <% (session.movements||[]).forEach(m => { %>
+          <tr>
+            <td><%= fmt(m.createdAt) %></td>
+            <td><%= m.type %></td>
+            <td><%= m.reason %></td>
+            <td style="text-align:right">$ <%= money(m.amount) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (session.notes) { %>
+    <div class="card" style="margin-top: 10px;">
+      <h3>Notas</h3>
+      <div><%= session.notes %></div>
+    </div>
+  <% } %>
+
+  <div class="footer">
+    <div class="sign">
+      ___________________________<br/>Cajero(a)
+    </div>
+    <div class="sign">
+      ___________________________<br/>Supervisor(a)
+    </div>
+  </div>
+</body>
+</html>

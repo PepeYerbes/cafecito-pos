@@ -123,16 +123,18 @@ export class PosApiService {
     return this.http.post<any>(`${this.base}/sales/${saleId}/return`, { items, reason });
   }
 
-  /* ============================================================
-   * ⚠️ Métodos legacy eliminados (usaban rutas antiguas):
-   *  - getCashSession(id)(sessionId: string)
-   *  - getSessionReport(sessionId: string)
-   *  - getSaleTicketPdfBlob(saleId: string)
-   *  - downloadCashPdf(sessionId: string)
-   *
-   * Sustituciones:
-   *  - Detalle/Resumen de sesión: getCashSession(id)  (JSON)
-   *  - PDF de sesión:             downloadCashPdf(id) (Blob)
-   *  - Ticket de venta PDF:       si mantienes tickets, define endpoint actual en backend y lo añadimos aquí.
-   * ============================================================ */
+  
+  /** Historial de cierres (CLOSED) con paginación y filtros opcionales */
+  getCloseHistory(opts?: { page?: number; pageSize?: number; from?: string; to?: string }) {
+    let url = `${this.base}/cash/register/history`;
+    const params = new URLSearchParams();
+    if (opts?.page) params.set('page', String(opts.page));
+    if (opts?.pageSize) params.set('pageSize', String(opts.pageSize));
+    if (opts?.from) params.set('from', opts.from);
+    if (opts?.to) params.set('to', opts.to);
+    const qs = params.toString();
+    if (qs) url += `?${qs}`;
+    return this.http.get<{ total: number; page: number; pageSize: number; items: any[] }>(url);
+  }
 }
+
