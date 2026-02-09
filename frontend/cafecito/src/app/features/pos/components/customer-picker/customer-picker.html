@@ -1,0 +1,31 @@
+<section class="picker">
+  <div class="search">
+    <input type="search" placeholder="Buscar cliente (nombre, tel, email)"
+           [ngModel]="q()" (ngModelChange)="q.set($event)" (keyup.enter)="search()"/>
+    <button (click)="search()">Buscar</button>
+  </div>
+
+  <div class="selected" *ngIf="selected() as c">
+    <span class="badge">Cliente seleccionado</span>
+    <div class="name">{{ c.name }}</div>
+    <div class="meta">
+      <span>{{ c.phone || '—' }}</span> · <span>{{ c.email || '—' }}</span>
+    </div>
+    <div class="loyalty">Puntos: <b>{{ c.points || 0 }}</b></div>
+    <button class="outline" (click)="clear()">Quitar</button>
+  </div>
+
+  <ul class="results" *ngIf="!selected()">
+    <li *ngFor="let c of results()">
+      <button (click)="pick(c)">
+        <div class="name">{{ c.name }}</div>
+        <div class="meta">
+          <span>{{ c.phone || '—' }}</span> · <span>{{ c.email || '—' }}</span>
+        </div>
+        <div class="loyalty">Puntos: <b>{{ c.points || 0 }}</b></div>
+      </button>
+    </li>
+    <li *ngIf="!results().length && !loading()">Sin resultados</li>
+    <li *ngIf="loading()">Buscando…</li>
+  </ul>
+</section>

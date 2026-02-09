@@ -1,0 +1,36 @@
+<section class="login-container">
+  <h2>Cafecito Feliz — Iniciar sesión</h2>
+
+  <form (submit)="submit($event)">
+    <label>
+      Correo
+      <input
+        type="email"
+        name="email"
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+        [ngModelOptions]="{standalone:true}"
+        required
+      />
+    </label>
+
+    <label>
+      Contraseña
+      <input
+        type="password"
+        name="password"
+        [ngModel]="password()"
+        (ngModelChange)="password.set($event)"
+        [ngModelOptions]="{standalone:true}"
+        required
+      />
+    </label>
+
+    <button type="submit" [disabled]="loading()">Entrar</button>
+    <p class="error" *ngIf="error()">{{ error() }}</p>
+  </form>
+
+  <p class="muted">
+    ¿Olvidaste tu contraseña? Contacta a un administrador.
+  </p>
+</section>

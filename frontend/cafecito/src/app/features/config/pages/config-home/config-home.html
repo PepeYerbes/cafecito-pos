@@ -1,0 +1,85 @@
+<section class="config">
+  <h2>Configuración</h2>
+
+  <div class="grid">
+    <!-- ===== Productos ===== -->
+    <section class="card">
+      <h3>Productos</h3>
+      <form (submit)="saveProduct(); $event.preventDefault()">
+        <div class="row">
+          <label>Nombre
+            <input name="p_nombre" [ngModel]="pForm().nombre" (ngModelChange)="setPNombre($event)" [ngModelOptions]="{standalone:true}" />
+          </label>
+          <label>SKU
+            <input name="p_codigo" [ngModel]="pForm().codigo" (ngModelChange)="setPCodigo($event)" [ngModelOptions]="{standalone:true}" />
+          </label>
+        </div>
+        <div class="row">
+          <label>Precio
+            <input type="number" step="0.01" name="p_precio" [ngModel]="pForm().precio" (ngModelChange)="setPPrecio($event)" [ngModelOptions]="{standalone:true}" />
+          </label>
+          <label>Stock
+            <input type="number" name="p_stock" [ngModel]="pForm().stock" (ngModelChange)="setPStock($event)" [ngModelOptions]="{standalone:true}" />
+          </label>
+        </div>
+        <div class="row">
+          <label>Categoría
+            <select name="p_categoria" [ngModel]="pForm().categoria" (ngModelChange)="setPCategoria($event)" [ngModelOptions]="{standalone:true}">
+              <option *ngFor="let c of categorias" [value]="c">{{ c }}</option>
+            </select>
+          </label>
+          <label>Activo
+            <select name="p_activo" [ngModel]="pForm().activo" (ngModelChange)="setPActivo($event)" [ngModelOptions]="{standalone:true}">
+              <option [ngValue]="true">Sí</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <label>IVA (taxRate)
+            <input type="number" step="0.01" name="p_tax" [ngModel]="pForm().taxRate" (ngModelChange)="setPTax($event)" [ngModelOptions]="{standalone:true}" />
+          </label>
+          <label>Foto
+            <input type="file" accept="image/*" (change)="onPickImage($any($event.target).files?.[0] || null)" />
+          </label>
+        </div>
+        <div class="actions">
+          <button type="submit" [disabled]="pLoading()">Guardar</button>
+          <button type="button" class="outline" (click)="clearProductForm()">Limpiar</button>
+        </div>
+        <p class="error" *ngIf="pError()">{{ pError() }}</p>
+      </form>
+    </section>
+
+    <!-- ===== Usuarios ===== -->
+    <section class="card">
+      <h3>Usuarios (Vendedores)</h3>
+      <form (submit)="saveUser(); $event.preventDefault()">
+        <div class="row">
+          <label>Nombre
+            <input name="u_name" [ngModel]="uForm().name" (ngModelChange)="setUName($event)" [ngModelOptions]="{standalone:true}" />
+          </label>
+          <label>Email
+            <input type="email" name="u_email" [ngModel]="uForm().email" (ngModelChange)="setUEmail($event)" [ngModelOptions]="{standalone:true}" />
+          </label>
+        </div>
+        <div class="row">
+          <label>Rol
+            <select name="u_role" [ngModel]="uForm().role" (ngModelChange)="setURole($event)" [ngModelOptions]="{standalone:true}">
+              <option value="CASHIER">CASHIER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </label>
+          <label>Contraseña
+            <input type="password" name="u_pass" [ngModel]="uForm().password" (ngModelChange)="setUPass($event)" [ngModelOptions]="{standalone:true}" placeholder="(dejar vacío para no cambiar)"/>
+          </label>
+        </div>
+        <div class="actions">
+          <button type="submit" [disabled]="uLoading()">Guardar</button>
+          <button type="button" class="outline" (click)="clearUserForm()">Limpiar</button>
+        </div>
+        <p class="error" *ngIf="uError()">{{ uError() }}</p>
+      </form>
+    </section>
+  </div>
+</section>

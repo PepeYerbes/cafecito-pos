@@ -1,4 +1,3 @@
-
 export interface Producto {
   _id: string;
   nombre: string;
@@ -10,6 +9,7 @@ export interface Producto {
   createdAt?: string;
   updatedAt?: string;
   taxRate?: number;
+  imageUrl?: string; 
 }
 
 export interface ProductosResponse {
@@ -19,3 +19,4 @@ export interface ProductosResponse {
   total: number;
   totalPages: number;
 }
+``

@@ -3,44 +3,44 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
-
 import './config/db.js';
 import cashRoutes from './routes/cash.js';
 import salesRoutes from './routes/sales.js';
 import productsRoutes from './routes/products.js';
-
-// ⬇️ NUEVO: router de sesiones/cierres
 import sessionsRouter from './modules/cashSessions/cashSessions.router.js';
+import authRoutes from './routes/auth.js';
+import usersRoutes from './routes/users.js';
+import customersRoutes from './routes/customers.js';
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '5mb' }));
 app.use(morgan('dev'));
 
-// ⬇️ NUEVO: servir /public para logo y PDFs
+// Static public (logo, uploads, PDFs)
 app.use('/public', express.static(path.resolve(process.cwd(), 'public')));
 
 // Health
 app.get('/api/health', (_, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
-// Rutas existentes
+// Auth & Management
+app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);         // admin-only
+app.use('/api/customers', customersRoutes); // admin + cashier (según método)
+
+// POS core
 app.use('/api/cash', cashRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/productos', productsRoutes);
-
-// ⛔️ Antes tenías: app.use('/api', cashRoutes);
-//     Eso duplica endpoints y puede causar conflictos.
-//     Lo ELIMINAMOS. Si necesitas alias específicos, los montamos explícitos.
-
-// ⬇️ NUEVO: sesiones/cierres (historial, detalle, cerrar, pdf, reimprimir)
 app.use('/api/sessions', sessionsRouter);
 
-// Manejo de errores básico
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).json({ error: err.message || 'Error interno' });
+  const code = err.statusCode || 500;
+  res.status(code).json({ message: err.message || 'Error interno' });
 });
 
 const PORT = process.env.PORT || 3001;

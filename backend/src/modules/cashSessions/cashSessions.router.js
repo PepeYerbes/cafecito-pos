@@ -15,7 +15,7 @@ router.get('/:id/pdf', controller.downloadPdf);
 // Reimprimir PDF
 router.post('/:id/reprint', controller.reprint);
 
-// Cerrar una sesión abierta (requiere countedCash)
+// ✅ Cerrar una sesión (canónico)
 router.post('/:id/close', controller.closeSession);
 
 export default router;

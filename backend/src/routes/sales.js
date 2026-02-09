@@ -5,6 +5,7 @@ import Product from '../models/Product.js';
 import Sale from '../models/Sale.js';
 import Return from '../models/Return.js';
 import CashMovement from '../models/CashMovement.js';
+import Customer from '../models/Customer.js';
 import { decreaseStock, increaseStock } from '../services/inventory.js';
 
 const router = Router();
@@ -33,9 +34,12 @@ function buildSaleItems(inputItems) {
 
 // POST /sales   (crea venta simple)
 router.post('/', auth, requireopenCash, async (req, res) => {
-  const { items, paidWith, discount = 0, notes = '' } = req.body;
+  const { items, paidWith, discount = 0, notes = '', customerId } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: 'Items requeridos' });
+  }
+  if (!['CASH','CARD','MIXED'].includes(paidWith)) {
+    return res.status(400).json({ message: 'paidWith inválido' });
   }
 
   // Obtener datos de productos si no vienen name/price
@@ -58,7 +62,7 @@ router.post('/', auth, requireopenCash, async (req, res) => {
 
   const gross = saleItems.reduce((a,i)=>a+i.subtotal,0);
   const taxes = saleItems.reduce((a,i)=>a+i.tax,0);
-  const itemsTotal = saleItems.reduce((a,i)=>a+i.total,0); // gross + taxes
+  const itemsTotal = saleItems.reduce((a,i)=>a+i.total,0);
 
   const disc = Number(discount) || 0;
   if (disc < 0) return res.status(400).json({ message: 'Descuento inválido' });
@@ -72,6 +76,7 @@ router.post('/', auth, requireopenCash, async (req, res) => {
   const sale = await Sale.create({
     sessionId: req.session._id,
     userId: req.user.id,
+    customerId: customerId || undefined,
     items: saleItems,
     gross,
     taxes,
@@ -80,6 +85,20 @@ router.post('/', auth, requireopenCash, async (req, res) => {
     notes: String(notes || ''),
     paidWith
   });
+
+  // Lealtad (si tiene cliente)
+  if (customerId) {
+    const rate = parseFloat(process.env.LOYALTY_POINTS_PER_MXN || '0.05'); // 1 punto c/20 MXN
+    const earned = Math.floor(total * rate);
+    const c = await Customer.findById(customerId);
+    if (c) {
+      c.points = Math.max(0, (c.points || 0) + earned);
+      c.totalSpent = (c.totalSpent || 0) + total;
+      c.visitsCount = (c.visitsCount || 0) + 1;
+      c.lastVisit = new Date();
+      await c.save();
+    }
+  }
 
   res.json(sale);
 });
@@ -97,9 +116,7 @@ router.post('/:id/cancel', auth, requireopenCash, async (req, res) => {
   sale.status = 'CANCELLED';
   await sale.save();
 
-  // Si fue CASH, refleja como salida? (opcional; en cancelación antes de corte, podemos descontar de netSales sin movimiento aparte)
-  // Aquí NO generamos movimiento, se ajusta en expected por ventas netas.
-
+  // Revertir lealtad (opcional: aquí no descontamos puntos ya otorgados; si quieres, lo implemento)
   res.json({ message: 'Venta cancelada', sale });
 });
 
@@ -121,18 +138,18 @@ router.post('/:id/return', auth, requireopenCash, async (req, res) => {
     }
   }
 
-// Factor para aplicar descuento proporcionalmente al monto original de items
-const sumLineTotals = sale.items.reduce((a, i) => a + (i.total || 0), 0);
-const paidTotal = Number(sale.total || 0);
-const factor = sumLineTotals > 0 ? (paidTotal / sumLineTotals) : 1; // 0..1
+  // Factor para aplicar descuento proporcionalmente al monto original de items
+  const sumLineTotals = sale.items.reduce((a, i) => a + (i.total || 0), 0);
+  const paidTotal = Number(sale.total || 0);
+  const factor = sumLineTotals > 0 ? (paidTotal / sumLineTotals) : 1;
 
   // Calcular monto de reembolso proporcional
- let refundAmount = 0;
-for (const it of items) {
-  const line = sale.items.find(si => String(si.productId) === String(it.productId));
-  const unitTotal = (line.total / line.quantity) * factor; // ✅ aplica descuento proporcional
-  refundAmount += unitTotal * it.quantity;
-}
+  let refundAmount = 0;
+  for (const it of items) {
+    const line = sale.items.find(si => String(si.productId) === String(it.productId));
+    const unitTotal = (line.total / line.quantity) * factor;
+    refundAmount += unitTotal * it.quantity;
+  }
 
   // Reponer stock
   await increaseStock(items);
@@ -142,15 +159,15 @@ for (const it of items) {
     saleId: sale._id,
     sessionId: req.session._id,
     items: items.map(it => {
-  const line = sale.items.find(si => String(si.productId) === String(it.productId));
-  const unitTotal = (line.total / line.quantity) * factor;
-  return { productId: it.productId, quantity: it.quantity, amount: unitTotal * it.quantity };
-}),
+      const line = sale.items.find(si => String(si.productId) === String(it.productId));
+      const unitTotal = (line.total / line.quantity) * factor;
+      return { productId: it.productId, quantity: it.quantity, amount: unitTotal * it.quantity };
+    }),
     reason,
     refundAmount
   });
 
-  // Si pago fue CASH, registrar movimiento OUT
+  // Si pago fue CASH, movimiento OUT
   if (sale.paidWith === 'CASH') {
     await CashMovement.create({
       sessionId: req.session._id,
@@ -161,17 +178,14 @@ for (const it of items) {
     });
   }
 
-  // Actualizar estado de venta
+  // Estado venta
   const totalRefunds = (await Return.find({ saleId: sale._id }))
     .reduce((a,r)=>a+(r.refundAmount||0),0);
 
-  if (totalRefunds >= sale.total - 0.005) {
-    sale.status = 'REFUNDED_FULL';
-  } else {
-    sale.status = 'REFUNDED_PARTIAL';
-  }
+  sale.status = (totalRefunds >= sale.total - 0.005) ? 'REFUNDED_FULL' : 'REFUNDED_PARTIAL';
   await sale.save();
 
+  // Lealtad: opcionalmente descontar puntos proporcionales (si lo deseas, lo añadimos)
   res.json({ message: 'Devolución registrada', return: ret, sale });
 });
 

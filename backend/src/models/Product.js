@@ -7,7 +7,8 @@ const ProductSchema = new mongoose.Schema({
   taxRate:   { type: Number, default: 0.16 },
   stock:     { type: Number, default: 0 },
   active:    { type: Boolean, default: true, alias: 'activo' },
-  categoria: { type: String, enum: ['Café', 'Té', 'Frappé', 'Postre', 'Snack', 'Otro'], default: 'Otro' }
+  categoria: { type: String, enum: ['Café', 'Té', 'Frappé', 'Postre', 'Snack', 'Otro'], default: 'Otro' },
+  imageUrl:  { type: String, default: '' }
 }, { timestamps: true });
 
 export default mongoose.model('Product', ProductSchema);

@@ -1,0 +1,15 @@
+.config { display: grid; gap: 12px; }
+.grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+.card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 8px; }
+label { display: grid; gap: 6px; font-weight: 600; }
+input, select { padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; }
+.actions { display: flex; gap: 8px; }
+button { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+button.outline { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+button.danger { background: #b91c1c; }
+.table-wrap { overflow: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { border-bottom: 1px solid #eee; padding: 6px; }
+.thumb { height: 48px; width: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+.error { color: #b91c1c; }

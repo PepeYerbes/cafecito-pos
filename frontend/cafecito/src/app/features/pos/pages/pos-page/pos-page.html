@@ -1,5 +1,5 @@
 <section class="layout">
-  <!-- Mini menú lateral -->
+  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">
       <span class="logo">☕</span>
@@ -18,14 +18,13 @@
       <a routerLink="/catalogo" routerLinkActive="active">🗂️ Catálogo</a>
       <a routerLink="/config" routerLinkActive="active">⚙️ Configuración</a>
       <a routerLink="/pos/shift-history" routerLinkActive="active">📜 Historial cierres</a>
+      <a routerLink="/customers" routerLinkActive="active">👥 Clientes</a>
     </nav>
 
     <div class="session">
       <ng-container *ngIf="!loadingCash(); else loadingTpl">
         <div *ngIf="hasOpenSession(); else closedTpl" class="badge open">Caja abierta</div>
-        <ng-template #closedTpl>
-          <div class="badge closed">Caja cerrada</div>
-        </ng-template>
+        <ng-template #closedTpl><div class="badge closed">Caja cerrada</div></ng-template>
       </ng-container>
 
       <div class="actions">
@@ -44,24 +43,19 @@
     </header>
 
     <div class="workspace">
-      <!-- Columna de productos -->
+      <!-- Productos -->
       <section class="pane">
         <ng-container *ngIf="!loadingProducts(); else loadingTpl2">
-          <app-product-grid
-            [productos]="productos()"
-            (add)="addProduct($event)">
-          </app-product-grid>
+          <app-product-grid [productos]="productos()" (add)="addProduct($event)"></app-product-grid>
         </ng-container>
-
-        <ng-template #loadingTpl2>
-          <div class="muted">Cargando productos…</div>
-        </ng-template>
+        <ng-template #loadingTpl2><div class="muted">Cargando productos…</div></ng-template>
       </section>
 
-      <!-- Columna de carrito & totales -->
+      <!-- Carrito / Totales / Cliente -->
       <section class="pane narrow">
+        <app-customer-picker (select)="setCustomer($event)"></app-customer-picker>
         <app-cart></app-cart>
-        <app-totals></app-totals>
+        <app-totals (checkout)="onCheckout()"></app-totals>
       </section>
     </div>
   </main>

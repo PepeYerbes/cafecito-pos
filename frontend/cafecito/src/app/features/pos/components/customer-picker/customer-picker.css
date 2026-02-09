@@ -1,0 +1,10 @@
+.picker { border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: #fff; display: grid; gap: 8px; }
+.search { display: flex; gap: 6px; }
+input { flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; }
+button { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 6px 8px; cursor: pointer; }
+button.outline { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+.results { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.results li button { width: 100%; text-align: left; background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 8px; }
+.badge { padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #1e3a8a; }
+.name { font-weight: 700; }
+.meta, .loyalty { color: #6b7280; font-size: 12px; }

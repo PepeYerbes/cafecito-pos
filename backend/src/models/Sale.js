@@ -6,23 +6,26 @@ const SaleItemSchema = new mongoose.Schema({
   quantity: { type: Number, required: true },
   unitPrice: { type: Number, required: true },
   taxRate: { type: Number, default: 0.16 },
-  subtotal: { type: Number, required: true }, // unitPrice*qty (sin IVA)
-  tax: { type: Number, required: true },      // subtotal*taxRate
-  total: { type: Number, required: true }     // subtotal+tax (SIN descuento)
+  subtotal: { type: Number, required: true },
+  tax: { type: Number, required: true },
+  total: { type: Number, required: true }
 }, { _id: false });
 
 const SaleSchema = new mongoose.Schema({
   sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'CashSession', required: true },
   userId: String,
 
+  // NEW
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
+
   items: [SaleItemSchema],
 
-  gross: Number,      // suma subtotales (sin IVA)
-  taxes: Number,      // suma IVA
-  discount: { type: Number, default: 0 },  // ✅ nuevo
-  total: Number,      // gross + taxes - discount
+  gross: Number,
+  taxes: Number,
+  discount: { type: Number, default: 0 },
+  total: Number,
 
-  notes: { type: String, default: '' },    // ✅ nuevo
+  notes: { type: String, default: '' },
 
   paidWith: { type: String, enum: ['CASH','CARD','MIXED'], required: true },
   status: {
@@ -34,3 +37,4 @@ const SaleSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export default mongoose.model('Sale', SaleSchema);
+``

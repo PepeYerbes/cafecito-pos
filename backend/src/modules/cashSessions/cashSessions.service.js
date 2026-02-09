@@ -7,6 +7,10 @@ import CashMovement from '../../models/CashMovement.js';
 import ReturnModel from '../../models/Return.js';
 import { renderSessionPdf } from './cashSessions.pdf.js';
 
+// 🔹 Política de efectivo para pagos MIXED (ENV):
+//    IGNORE (default) | COUNT_AS_CASH | COUNT_AS_CARD
+const MIXED_CASH_POLICY = (process.env.MIXED_CASH_POLICY || 'IGNORE').toUpperCase();
+
 const PDF_DIR = path.join(process.cwd(), 'public', 'cierres');
 const BRAND = {
   branchName: 'Cafecito Feliz — Sucursal 01',
@@ -17,7 +21,8 @@ const BRAND = {
     orange: '#c44900',
     plum: '#432534'
   },
-  logoPath: path.join('public', 'assets', 'logo.png')
+  // 🔸 Ruta ABSOLUTA para Puppeteer (usada como file:///... en la plantilla EJS)
+  logoPath: path.join(process.cwd(), 'public', 'assets', 'logo.png')
 };
 
 export async function list({ status = 'CLOSED', page = 1, pageSize = 20, from, to }) {
@@ -54,7 +59,7 @@ export async function ensurePdf(sessionId) {
     await fs.access(abs);
     return abs;
   } catch {
-    // no existe: genera si es CLOSED
+    // no existe: genera si es CLOSED (o lo permites para pruebas)
     return generatePdf(sessionId).catch(() => null);
   }
 }
@@ -62,7 +67,7 @@ export async function ensurePdf(sessionId) {
 export async function generatePdf(sessionId) {
   const s = await CashSession.findById(sessionId).lean();
   if (!s) throw new Error('Sesión no encontrada');
-  // Permitimos reimpresión aun si OPEN (para pruebas), pero idealmente CLOSED
+
   await fs.mkdir(PDF_DIR, { recursive: true });
   const { abs } = pdfPathFor(sessionId);
 
@@ -131,16 +136,24 @@ export async function closeSession({ sessionId, countedCash, notes, closedBy }) 
   ]);
   const returnsSummary = returnsAgg[0] || { count: 0, refundAmount: 0 };
 
-  // Expected cash (ver notas de diseño)
+  // Expected cash
   const cashSales = payments.find(p => p.method === 'CASH')?.total || 0;
-  const expectedCash = (session.initialCash || 0) + cashSales + sumIn - sumOut;
+  const mixedSales = payments.find(p => p.method === 'MIXED')?.total || 0;
+
+  // 🔸 Aplica política MIXED:
+  // - COUNT_AS_CASH: suma MIXED al efectivo esperado
+  // - COUNT_AS_CARD / IGNORE: no lo suma
+  const effectiveCash = cashSales + (MIXED_CASH_POLICY === 'COUNT_AS_CASH' ? mixedSales : 0);
+
+  const expectedCash = (session.initialCash || 0) + effectiveCash + sumIn - sumOut;
 
   session.status = 'CLOSED';
   session.closedAt = new Date();
-  session.countedCash = countedCash;
+  if (typeof countedCash === 'number') session.countedCash = countedCash;
   session.expectedCash = expectedCash;
   session.difference = (countedCash ?? 0) - expectedCash;
   session.notes = notes || session.notes || '';
+  if (closedBy) session.closedBy = closedBy; // Mongoose castea a ObjectId si corresponde
 
   // Totales y secciones embebidas
   session.totals = {
@@ -157,7 +170,7 @@ export async function closeSession({ sessionId, countedCash, notes, closedBy }) 
   // Generar PDF
   await generatePdf(String(session._id));
 
-  // Respuesta con datos útiles + resumen de devoluciones
+  // Respuesta con datos útiles + resumen de devoluciones (informativo)
   const result = session.toObject();
   result.returns = returnsSummary;
   return result;

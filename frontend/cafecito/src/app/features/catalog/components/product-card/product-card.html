@@ -1,6 +1,6 @@
-
 <article class="card">
   <div class="card-body">
+    <img *ngIf="producto.imageUrl" [src]="producto.imageUrl" alt="" style="width:100%;height:140px;object-fit:cover;border-radius:6px;margin-bottom:6px;">
     <h3 class="title">{{ producto.nombre }}</h3>
     <p class="code">Código: {{ producto.codigo }}</p>
     <p class="category">Categoría: {{ producto.categoria }}</p>
