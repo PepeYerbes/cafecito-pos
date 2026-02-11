@@ -9,7 +9,9 @@ import { CommonModule } from '@angular/common';
   templateUrl: './totals.html',
   styleUrls: ['./totals.css']
 })
+
 export class TotalsComponent {
   @Output() checkout = new EventEmitter<void>();
+  @Output() sendToKitchen = new EventEmitter<void>();
   constructor(public pos: PosStateService) {}
 }

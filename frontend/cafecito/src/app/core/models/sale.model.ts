@@ -1,9 +1,10 @@
-export type PaidWith = 'CASH' | 'CARD' | 'MIXED';
+export type PaidWith = 'CASH' | 'CARD' | 'MIXED' | 'TRANSFER';
 
 export interface CreateSaleItem {
   productId: string;
   quantity: number;
 }
+
 
 export interface Sale {
   _id: string;

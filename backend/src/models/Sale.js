@@ -27,7 +27,7 @@ const SaleSchema = new mongoose.Schema({
 
   notes: { type: String, default: '' },
 
-  paidWith: { type: String, enum: ['CASH','CARD','MIXED'], required: true },
+  paidWith: { type: String, enum: ['CASH','CARD','MIXED','TRANSFER'], required: true },
   status: {
     type: String,
     enum: ['COMPLETED','CANCELLED','REFUNDED_PARTIAL','REFUNDED_FULL'],

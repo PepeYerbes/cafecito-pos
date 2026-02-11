@@ -12,7 +12,9 @@
       <div class="info">
         <div class="name">{{ it.producto.nombre }}</div>
         <div class="price">$ {{ it.producto.precio | number:'1.0-2' }}</div>
-      </div>
+        <div *ngIf="it.note" class="text-muted" style="font-size: 12px">Nota: {{ it.note }}</div>
+        <button class="btn btn-sm btn-outline-secondary mt-1" (click)="editNote(it.producto._id, it.note||'')" type="button">Nota</button>
+        </div>
       <div class="qty">
         <button (click)="dec(it.producto._id)">−</button>
         <input [value]="it.qty" (change)="directQty(it.producto._id, $any($event.target).value)">

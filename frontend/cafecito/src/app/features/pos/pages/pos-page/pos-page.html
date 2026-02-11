@@ -55,7 +55,7 @@
       <section class="pane narrow">
         <app-customer-picker (select)="setCustomer($event)"></app-customer-picker>
         <app-cart></app-cart>
-        <app-totals (checkout)="onCheckout()"></app-totals>
+        <app-totals (checkout)="onCheckout()" (sendToKitchen)="onSendToKitchen()"></app-totals>
       </section>
     </div>
   </main>

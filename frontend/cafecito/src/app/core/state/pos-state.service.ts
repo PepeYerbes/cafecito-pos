@@ -101,4 +101,31 @@ export class PosStateService {
     if (!f) return;
     this.setQty(f.producto._id, value);
   }
+
+  
+// ===== NUEVO: setNote para items
+  setNote(productId: string, note: string) {
+    const arr = [...this._items()];
+    const idx = arr.findIndex(i => i.producto._id === productId);
+    if (idx >= 0) {
+      arr[idx] = { ...arr[idx], note: note || '' };
+      this._items.set(arr);
+    }
+  }
+
+  // ===== NUEVO: helpers para payloads (orders y sales)
+  toOrderItems() {
+    return this._items().map(i => ({
+      productId: i.producto._id,
+      quantity: i.qty,
+      note: i.note || ''
+    }));
+  }
+
+  toSaleItems() {
+    return this._items().map(i => ({
+      productId: i.producto._id,
+      quantity: i.qty
+    }));
+  }
 }

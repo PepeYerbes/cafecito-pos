@@ -3,6 +3,7 @@ import { CommonModule, CurrencyPipe, DatePipe, NgClass } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PosApiService } from '../../../../../core/services/pos-api.service';
 import { CashSession } from '../../../../../core/models/cash.model';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-shift-detail',
@@ -32,11 +33,10 @@ export class ShiftDetailPage implements OnInit {
   open() {
   const id = this.id();
   if (!id) return;
-  // El endpoint ya responde inline; abrirá en otra pestaña
-  const base = (window as any).ENV_API_BASE_URL || ''; // opcional si quieres inyectar dinámico
-  window.open(`${base}${base.endsWith('/api') ? '' : ''}/api/cash/register/${id}/report?format=pdf`, '_blank');
+  const base = environment.apiBaseUrl; // '/api' en prod, 'http://localhost:3001/api' en dev
+  const url = `${base}/cash/register/${id}/report?format=pdf`;
+  window.open(url, '_blank');
 }
-
 
   download() {
     const id = this.id();

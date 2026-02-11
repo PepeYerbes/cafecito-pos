@@ -1,21 +1,17 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
-
 import { PosApiService } from '../../../../core/services/pos-api.service';
 import { CashSession } from '../../../../core/models/cash.model';
-
 import { ProductGridComponent } from '../../components/product-grid/product-grid';
 import { CartComponent } from '../../components/cart/cart';
 import { TotalsComponent } from '../../components/totals/totals';
-
 import { ProductosService } from '../../../../core/services/productos.service';
 import { Producto } from '../../../../core/models/product.model';
 import { PosStateService } from '../../../../core/state/pos-state.service';
-
-// Picker de cliente
 import { CustomerPickerComponent } from '../../components/customer-picker/customer-picker';
 import { Customer } from '../../../../core/services/customers.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-pos-page',
@@ -38,11 +34,8 @@ export class PosPageComponent implements OnInit {
   loadingCash = signal<boolean>(true);
   errorCash = signal<string | null>(null);
   hasOpenSession = computed(() => !!this.cash());
-
   productos = signal<Producto[]>([]);
   loadingProducts = signal<boolean>(true);
-
-  // Cliente seleccionado
   selectedCustomer = signal<Customer | null>(null);
 
   constructor(
@@ -73,21 +66,33 @@ export class PosPageComponent implements OnInit {
 
   setCustomer(c: Customer | null) { this.selectedCustomer.set(c); }
 
-  onCheckout() {
-    const items = this.posState.items().map(it => ({ productId: it.producto._id, quantity: it.qty }));
-    if (!items.length) return;
-    this.api.createSale({
-      items,
-      paidWith: 'CASH',
-      discount: 0,
-      notes: '',
-      customerId: this.selectedCustomer()?._id
-    }).subscribe({
-      next: () => {
-        alert('Venta registrada');
-        this.posState.clear();
+  
+onCheckout() {
+    if (!this.posState.items().length) return;
+    this.router.navigate(['/pos/checkout'], {
+      queryParams: { customerId: this.selectedCustomer()?._id || null }
+    });
+  }
+
+  onSendToKitchen() {
+    if (!this.posState.items().length) return;
+    const items = this.posState.toOrderItems();
+    const customerId = this.selectedCustomer()?._id;
+
+    this.api.createKitchenOrder({ items, customerId }).subscribe({
+      next: (order) => {
+        alert(`Comanda enviada a cocina (Ticket: ${order.ticket || order._id.slice(-6)})`);
+        // Flujo recomendado: ir a cobro inmediatamente después
+        this.router.navigate(['/pos/checkout'], {
+          queryParams: { customerId: customerId || null }
+        });
       },
-      error: (e) => alert(e?.error?.message || 'Error registrando venta')
+      error: (e) => {
+        // Mostrar mensajes de backend (422/400)
+        const msg = e?.error?.error || e?.error?.message || 'Error creando comanda';
+        const details = e?.error?.details;
+        alert(details ? `${msg}\n${details.map((d:any)=>d.message||JSON.stringify(d)).join('\n')}` : msg);
+      }
     });
   }
 }

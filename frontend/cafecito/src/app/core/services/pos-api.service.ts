@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { KitchenOrder } from '../models/order.model';
 import { environment } from '../../../environments/environment';
 
 import {
@@ -59,20 +60,39 @@ export class PosApiService {
     return this.http.get<{ total: number; page: number; pageSize: number; items: any[] }>(url);
   }
 
-  // ===== Ventas =====
+  
+// ===== Ventas ===== (ajuste leve: tipado y robustez)
   createSale(payload: {
     items: { productId: string; quantity: number }[];
-    paidWith: PaidWith; // 'CASH'|'CARD'|'MIXED'
+    paidWith: PaidWith;
     discount?: number;
     notes?: string;
-    customerId?: string; // <-- NUEVO
+    customerId?: string;
   }) {
-    return this.http.post<Sale | any>(`${this.base}/sales`, payload);
+    return this.http.post<Sale>(`${this.base}/sales`, payload);
   }
   cancelSale(saleId: string) {
     return this.http.post<any>(`${this.base}/sales/${saleId}/cancel`, {});
   }
   returnSale(saleId: string, items: CreateSaleItem[], reason: string) {
     return this.http.post<any>(`${this.base}/sales/${saleId}/return`, { items, reason });
+  }
+
+  // ===== Orders (Kitchen) =====
+  createKitchenOrder(payload: {
+    items: { productId: string; quantity: number; note?: string }[];
+    notes?: string;
+    customerId?: string;
+  }) {
+    return this.http.post<KitchenOrder>(`${this.base}/orders`, payload);
+  }
+
+  listKitchenOrders(status?: 'NEW'|'IN_PROGRESS'|'READY') {
+    const qs = status ? `?status=${status}` : '';
+    return this.http.get<KitchenOrder[]>(`${this.base}/orders${qs}`);
+  }
+
+  updateKitchenOrderStatus(id: string, status: 'IN_PROGRESS'|'READY'|'DELIVERED'|'CANCELLED') {
+    return this.http.patch<KitchenOrder>(`${this.base}/orders/${id}/status`, { status });
   }
 }

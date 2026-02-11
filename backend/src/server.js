@@ -11,6 +11,7 @@ import sessionsRouter from './modules/cashSessions/cashSessions.router.js';
 import authRoutes from './routes/auth.js';
 import usersRoutes from './routes/users.js';
 import customersRoutes from './routes/customers.js';
+import ordersRoutes from './routes/orders.js';
 
 dotenv.config();
 
@@ -25,10 +26,12 @@ app.use('/public', express.static(path.resolve(process.cwd(), 'public')));
 // Health
 app.get('/api/health', (_, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
+
 // Auth & Management
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);         // admin-only
 app.use('/api/customers', customersRoutes); // admin + cashier (según método)
+app.use('/api/orders', ordersRoutes);       // admin + cashier (según método)
 
 // POS core
 app.use('/api/cash', cashRoutes);
