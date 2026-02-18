@@ -1,50 +1,73 @@
-<section class="layout">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="brand">
-      <span class="logo">☕</span>
-      <div class="title">
-        <div class="name">POS</div>
-        <small class="muted">Caja y Ventas</small>
+<!-- pos/components/pages/pos-page/pos-page.html -->
+<section class="layout" [class.handset]="isHandset">
+  <!-- Sidebar rail (mini) + panel de expansión -->
+  <aside class="sidebar-rail" (mouseenter)="onSidebarEnter()" (mouseleave)="onSidebarLeave()">
+    <!-- Rail (mini) siempre visible en desktop: sólo íconos, sin fondo oscuro grande -->
+    <div class="rail">
+      <a routerLink="/pos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="rail-item" title="Punto de venta">🧾</a>
+      <a routerLink="/pos/open-shift" routerLinkActive="active" class="rail-item" title="Abrir caja">🔓</a>
+      <a routerLink="/pos/close-shift" routerLinkActive="active" class="rail-item" title="Cerrar caja">🔒</a>
+      <a routerLink="/catalogo" routerLinkActive="active" class="rail-item" title="Catálogo">🗂️</a>
+      <a routerLink="/config" routerLinkActive="active" class="rail-item" title="Configuración">⚙️</a>
+      <a routerLink="/pos/shift-history" routerLinkActive="active" class="rail-item" title="Historial cierres">📜</a>
+      <a routerLink="/customers" routerLinkActive="active" class="rail-item" title="Clientes">👥</a>
+    </div>
+
+    <!-- Panel expandido (overlay), aparece al hover -->
+    <div class="panel" [class.visible]="panelVisible || isHandset">
+      <div class="brand">
+        <span class="logo">☕</span>
+        <div class="title">
+          <div class="name">POS</div>
+          <small class="muted">Caja y Ventas</small>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a routerLink="/pos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          🧾 <span class="label">Punto de venta</span>
+        </a>
+        <a routerLink="/pos/open-shift" routerLinkActive="active">🔓 <span class="label">Abrir caja</span></a>
+        <a routerLink="/pos/close-shift" routerLinkActive="active">🔒 <span class="label">Cerrar caja</span></a>
+        <a routerLink="/catalogo" routerLinkActive="active">🗂️ <span class="label">Catálogo</span></a>
+        <a routerLink="/config" routerLinkActive="active">⚙️ <span class="label">Configuración</span></a>
+        <a routerLink="/pos/shift-history" routerLinkActive="active">📜 <span class="label">Historial cierres</span></a>
+        <a routerLink="/customers" routerLinkActive="active">👥 <span class="label">Clientes</span></a>
+      </nav>
+
+      <div class="session">
+        <ng-container *ngIf="!loadingCash(); else loadingTpl">
+          <div *ngIf="hasOpenSession(); else closedTpl" class="badge open">Caja abierta</div>
+          <ng-template #closedTpl><div class="badge closed">Caja cerrada</div></ng-template>
+        </ng-container>
+
+        <div class="actions">
+          <button class="btn" (click)="goOpenShift()">Abrir</button>
+          <button class="btn outline" (click)="goCloseShift()">Cerrar</button>
+        </div>
       </div>
     </div>
 
-    <nav class="nav">
-      <a routerLink="/pos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        🧾 Punto de venta
-      </a>
-      <a routerLink="/pos/open-shift" routerLinkActive="active">🔓 Abrir caja</a>
-      <a routerLink="/pos/close-shift" routerLinkActive="active">🔒 Cerrar caja</a>
-      <a routerLink="/catalogo" routerLinkActive="active">🗂️ Catálogo</a>
-      <a routerLink="/config" routerLinkActive="active">⚙️ Configuración</a>
-      <a routerLink="/pos/shift-history" routerLinkActive="active">📜 Historial cierres</a>
-      <a routerLink="/customers" routerLinkActive="active">👥 Clientes</a>
-    </nav>
-
-    <div class="session">
-      <ng-container *ngIf="!loadingCash(); else loadingTpl">
-        <div *ngIf="hasOpenSession(); else closedTpl" class="badge open">Caja abierta</div>
-        <ng-template #closedTpl><div class="badge closed">Caja cerrada</div></ng-template>
-      </ng-container>
-
-      <div class="actions">
-        <button class="btn" (click)="goOpenShift()">Abrir</button>
-        <button class="btn outline" (click)="goCloseShift()">Cerrar</button>
-      </div>
-    </div>
+    <!-- Fondo semitransparente sólo en móvil cuando el panel está visible -->
+    <div class="backdrop" *ngIf="isHandset && panelVisible" (click)="closeSidebar()"></div>
   </aside>
 
   <!-- Contenido principal -->
   <main class="content">
     <header class="topbar">
+      <!-- Botón hamburguesa visible SOLO en móvil -->
+      <button class="menu-btn" type="button" (click)="toggleSidebar()" aria-label="Abrir menú" *ngIf="isHandset">
+        ☰
+      </button>
       <h1>Punto de venta</h1>
       <span class="muted" *ngIf="cash(); else noCash">Sesión activa</span>
       <ng-template #noCash><span class="muted">Sin sesión</span></ng-template>
     </header>
 
+    <!-- Vista sin scroll: alto completo; panes en dos columnas -->
     <div class="workspace">
       <!-- Productos -->
-      <section class="pane">
+      <section class="pane scrollable">
         <ng-container *ngIf="!loadingProducts(); else loadingTpl2">
           <app-product-grid [productos]="productos()" (add)="addProduct($event)"></app-product-grid>
         </ng-container>
@@ -52,7 +75,7 @@
       </section>
 
       <!-- Carrito / Totales / Cliente -->
-      <section class="pane narrow">
+      <section class="pane narrow scrollable">
         <app-customer-picker (select)="setCustomer($event)"></app-customer-picker>
         <app-cart></app-cart>
         <app-totals (checkout)="onCheckout()" (sendToKitchen)="onSendToKitchen()"></app-totals>

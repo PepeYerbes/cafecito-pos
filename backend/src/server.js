@@ -12,6 +12,7 @@ import authRoutes from './routes/auth.js';
 import usersRoutes from './routes/users.js';
 import customersRoutes from './routes/customers.js';
 import ordersRoutes from './routes/orders.js';
+import { errorHandler } from './middlewares/error-handler.js';
 
 dotenv.config();
 
@@ -19,32 +20,17 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 app.use(morgan('dev'));
-
-// Static public (logo, uploads, PDFs)
 app.use('/public', express.static(path.resolve(process.cwd(), 'public')));
-
-// Health
-app.get('/api/health', (_, res) => res.json({ ok: true, time: new Date().toISOString() }));
-
-
-// Auth & Management
+app.get('/api/health', (_req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);         // admin-only
 app.use('/api/customers', customersRoutes); // admin + cashier (según método)
 app.use('/api/orders', ordersRoutes);       // admin + cashier (según método)
-
-// POS core
 app.use('/api/cash', cashRoutes);
 app.use('/api/sales', salesRoutes);
-app.use('/api/productos', productsRoutes);
-app.use('/api/sessions', sessionsRouter);
+app.use('/api/products', productsRoutes);
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err);
-  const code = err.statusCode || 500;
-  res.status(code).json({ message: err.message || 'Error interno' });
-});
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Backend POS escuchando en :${PORT}`));

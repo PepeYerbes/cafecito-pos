@@ -1,7 +1,13 @@
-/* 1) SIEMPRE PRIMERO: @use */
+/* ---------------------------------------
+   Angular Material Theming + Cafecito Feliz
+   Archivo: src/styles.scss
+   --------------------------------------- */
+
+/* 1) Import Sass API de Angular Material */
 @use '@angular/material' as mat;
 
-/* 2) Paleta Cafecito Feliz como variables CSS */
+
+/* 2) Paleta de marca (variables CSS para uso general) */
 :root {
   --ink-black: #04151f;
   --dark-slate-grey: #183a37;
@@ -9,7 +15,7 @@
   --burnt-orange: #c44900;
   --midnight-violet: #432534;
 
-  /* Derivados */
+  /* Derivados utilitarios */
   --bg-app: #f8f6f3;
   --surface: #ffffff;
   --text: var(--ink-black);
@@ -21,39 +27,85 @@
   --danger: #b91c1c;
 }
 
-/* 3) Theming Angular Material (puedes ajustar paletas “primary/tertiary”) */
+/* 3) Definir paletas Material basadas en tu marca
+      (usamos primary con tu violeta y tertiary con tu naranja) */
+$primary-palette: (
+  50: #f0eef0,
+  100: #e0dce1,
+  200: #c2b9c3,
+  300: #a397a5,
+  400: #856487,
+  500: #432534, // midnigh-violet
+  600: #3b2130,
+  700: #331d2b,
+  800: #2b1926,
+  900: #231521,
+  contrast: (
+    50: #000,
+    100: #000,
+    200: #000,
+    300: #fff,
+    400: #fff,
+    500: #fff,
+    600: #fff,
+    700: #fff,
+    800: #fff,
+    900: #fff
+  )
+);
+
+$tertiary-palette: (
+  50: #fff1ea,
+  100: #ffdccc,
+  200: #ffc7ad,
+  300: #ffb08c,
+  400: #ff9a6c,
+  500: #c44900, // burnt-orange
+  600: #a83f00,
+  700: #8c3500,
+  800: #6f2a00,
+  900: #531f00,
+  contrast: (
+    50: #000,
+    100: #000,
+    200: #000,
+    300: #000,
+    400: #000,
+    500: #fff,
+    600: #fff,
+    700: #fff,
+    800: #fff,
+    900: #fff
+  )
+);
+
+/* 4) Aplicar el tema Material 3 al :root 
+      Nota: typography acepta familia; density: 0 (=default) */
 html {
   @include mat.theme((
     color: (
-      primary: (
-        50: #f0eef0, 100: #e0dce1, 200: #c2b9c3, 300: #a397a5, 400: #856487,
-        500: #432534, 600: #3b2130, 700: #331d2b, 800: #2b1926, 900: #231521,
-        contrast: (500: #fff)
-      ),
-      tertiary: (
-        50: #fff1ea, 100: #ffdccc, 200: #ffc7ad, 300: #ffb08c, 400: #ff9a6c,
-        500: #c44900, 600: #a83f00, 700: #8c3500, 800: #6f2a00, 900: #531f00,
-        contrast: (500: #fff)
-      )
+      primary: $primary-palette,
+      tertiary: $tertiary-palette
     ),
     typography: Roboto,
     density: 0
   ));
 }
 
-/* 4) Base global */
+/* 5) Base global */
+html, body { height: 100%; }
+
 body {
-  color-scheme: light;
+  color-scheme: light;           /* puedes cambiar a: light dark para seguir el sistema */
   background-color: var(--bg-app);
   color: var(--text);
   font: var(--mat-sys-body-medium);
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-
-/* 5) Utilidades de marca (clases globales que ya usas) */
+/* 6) Utilidades globales (respetando tu proyecto) */
 .btn {
   background: var(--accent);
   color: #fff;
@@ -61,18 +113,24 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
+  font-weight: 600;
+  transition: filter .15s ease;
 }
+.btn:hover { filter: brightness(1.05); }
+
 .btn.outline {
   background: transparent;
   color: var(--primary);
   border: 1px solid var(--primary);
 }
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
 }
+
 .badge {
   padding: 4px 8px;
   border-radius: 999px;
@@ -80,5 +138,23 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   text-align: center;
   border: 1px solid var(--border);
 }
+
 .link { color: var(--primary); text-decoration: none; }
 .muted { color: var(--muted); }
+
+/* 7) Helpers extra que usamos en POS */
+.h-screen { height: 100vh; }
+.min-h-screen { min-height: 100vh; }
+
+/* 8) (Opcional) Modo oscuro-lite con prefers-color-scheme */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-app: #0b0f14;
+    --surface: #0f1720;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --border: #1f2937;
+  }
+}
+*/

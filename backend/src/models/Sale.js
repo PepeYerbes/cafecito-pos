@@ -1,40 +1,32 @@
+// backend/src/models/Sale.js
 import mongoose from 'mongoose';
 
-const SaleItemSchema = new mongoose.Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-  name: String,
-  quantity: { type: Number, required: true },
-  unitPrice: { type: Number, required: true },
-  taxRate: { type: Number, default: 0.16 },
-  subtotal: { type: Number, required: true },
-  tax: { type: Number, required: true },
-  total: { type: Number, required: true }
-}, { _id: false });
+const { Schema, model, models, Types } = mongoose;
 
-const SaleSchema = new mongoose.Schema({
-  sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'CashSession', required: true },
-  userId: String,
-
-  // NEW
-  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
-
-  items: [SaleItemSchema],
-
-  gross: Number,
-  taxes: Number,
-  discount: { type: Number, default: 0 },
-  total: Number,
-
-  notes: { type: String, default: '' },
-
-  paidWith: { type: String, enum: ['CASH','CARD','MIXED','TRANSFER'], required: true },
-  status: {
-    type: String,
-    enum: ['COMPLETED','CANCELLED','REFUNDED_PARTIAL','REFUNDED_FULL'],
-    default: 'COMPLETED'
+const SaleItemSchema = new Schema(
+  {
+    product_id: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    product_name: { type: String, required: true },
+    quantity: { type: Number, required: true, min: 1 },
+    unit_price: { type: Number, required: true, min: 0 },
+    line_total: { type: Number, required: true, min: 0 },
   },
-  createdAt: { type: Date, default: Date.now }
-}, { timestamps: true });
+  { _id: false }
+);
 
-export default mongoose.model('Sale', SaleSchema);
-``
+const SaleSchema = new Schema(
+  {
+    customer_id: { type: Schema.Types.ObjectId, ref: 'Customer', default: null },
+    payment_method: { type: String, enum: ['cash', 'card', 'transfer'], default: 'cash' },
+    items: { type: [SaleItemSchema], required: true, validate: v => Array.isArray(v) && v.length > 0 },
+    subtotal: { type: Number, required: true, min: 0 },
+    discount_percent: { type: Number, required: true, min: 0 },
+    discount_amount: { type: Number, required: true, min: 0 },
+    total: { type: Number, required: true, min: 0 },
+    created_at: { type: Date, default: () => new Date() },
+  },
+  { versionKey: false }
+);
+
+const Sale = models.Sale || model('Sale', SaleSchema);
+export default Sale;
