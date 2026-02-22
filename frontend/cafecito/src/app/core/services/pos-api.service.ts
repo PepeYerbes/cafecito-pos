@@ -1,18 +1,10 @@
+// src/app/core/services/pos-api.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { KitchenOrder } from '../models/order.model';
 import { environment } from '../../../environments/environment';
 
-import {
-  CashSession,
-  CashMovement as ApiCashMovement
-} from '../models/cash.model';
-
-import {
-  CreateSaleItem,
-  PaidWith,
-  Sale
-} from '../models/sale.model';
+import { CashSession } from '../models/cash.model';
+import { CreateSaleItem, PaidWith, Sale } from '../models/sale.model';
 
 @Injectable({ providedIn: 'root' })
 export class PosApiService {
@@ -37,7 +29,6 @@ export class PosApiService {
     });
   }
   closeCash(countedCash: number, notes?: string) {
-    // Alias temporal (backend delega a /sessions/:id/close)
     return this.http.post<CashSession>(`${this.base}/cash/register/close`, { countedCash, notes });
   }
   getCashSession(id: string) {
@@ -49,19 +40,17 @@ export class PosApiService {
     });
   }
   getCloseHistory(opts?: { page?: number; pageSize?: number; from?: string; to?: string }) {
-    let url = `${this.base}/cash/register/history`;
     const params = new URLSearchParams();
-    if (opts?.page) params.set('page', String(opts.page));
+    if (opts?.page)     params.set('page',     String(opts.page));
     if (opts?.pageSize) params.set('pageSize', String(opts.pageSize));
-    if (opts?.from) params.set('from', opts.from);
-    if (opts?.to) params.set('to', opts.to);
+    if (opts?.from)     params.set('from',     opts.from);
+    if (opts?.to)       params.set('to',       opts.to);
     const qs = params.toString();
-    if (qs) url += `?${qs}`;
+    const url = `${this.base}/cash/register/history${qs ? '?' + qs : ''}`;
     return this.http.get<{ total: number; page: number; pageSize: number; items: any[] }>(url);
   }
 
-  
-// ===== Ventas ===== (ajuste leve: tipado y robustez)
+  // ===== Ventas =====
   createSale(payload: {
     items: { productId: string; quantity: number }[];
     paidWith: PaidWith;
@@ -71,28 +60,16 @@ export class PosApiService {
   }) {
     return this.http.post<Sale>(`${this.base}/sales`, payload);
   }
+
+  /** Descarga el ticket PDF de una venta como Blob */
+  getSaleTicketPdf(saleId: string) {
+    return this.http.get(`${this.base}/sales/${saleId}/ticket`, { responseType: 'blob' });
+  }
+
   cancelSale(saleId: string) {
     return this.http.post<any>(`${this.base}/sales/${saleId}/cancel`, {});
   }
   returnSale(saleId: string, items: CreateSaleItem[], reason: string) {
     return this.http.post<any>(`${this.base}/sales/${saleId}/return`, { items, reason });
-  }
-
-  // ===== Orders (Kitchen) =====
-  createKitchenOrder(payload: {
-    items: { productId: string; quantity: number; note?: string }[];
-    notes?: string;
-    customerId?: string;
-  }) {
-    return this.http.post<KitchenOrder>(`${this.base}/orders`, payload);
-  }
-
-  listKitchenOrders(status?: 'NEW'|'IN_PROGRESS'|'READY') {
-    const qs = status ? `?status=${status}` : '';
-    return this.http.get<KitchenOrder[]>(`${this.base}/orders${qs}`);
-  }
-
-  updateKitchenOrderStatus(id: string, status: 'IN_PROGRESS'|'READY'|'DELIVERED'|'CANCELLED') {
-    return this.http.patch<KitchenOrder>(`${this.base}/orders/${id}/status`, { status });
   }
 }

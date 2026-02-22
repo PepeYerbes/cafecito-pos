@@ -168,8 +168,7 @@ export const close = async (req, res) => {
     // Cerrar sesión
     s.status = 'CLOSED';
     s.closedAt = new Date();
-    s.closedBy = new mongoose.Types.ObjectId(); // demo
-    s.countedCash = toMoney(countedCash);
+    s.closedBy = req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined; s.countedCash = toMoney(countedCash);
     s.expectedCash = expectedCash;
     s.difference = difference;
     s.totals = {

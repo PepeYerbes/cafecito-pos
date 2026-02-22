@@ -1,85 +1,283 @@
-<section class="config">
-  <h2>Configuración</h2>
+<!-- src/app/features/config/pages/config-home/config-home.html -->
+<div class="config-page">
+  <h2>⚙️ Configuración</h2>
 
-  <div class="grid">
-    <!-- ===== Productos ===== -->
-    <section class="card">
-      <h3>Productos</h3>
-      <form (submit)="saveProduct(); $event.preventDefault()">
-        <div class="row">
-          <label>Nombre
-            <input name="p_nombre" [ngModel]="pForm().nombre" (ngModelChange)="setPNombre($event)" [ngModelOptions]="{standalone:true}" />
-          </label>
-          <label>SKU
-            <input name="p_codigo" [ngModel]="pForm().codigo" (ngModelChange)="setPCodigo($event)" [ngModelOptions]="{standalone:true}" />
-          </label>
-        </div>
-        <div class="row">
-          <label>Precio
-            <input type="number" step="0.01" name="p_precio" [ngModel]="pForm().precio" (ngModelChange)="setPPrecio($event)" [ngModelOptions]="{standalone:true}" />
-          </label>
-          <label>Stock
-            <input type="number" name="p_stock" [ngModel]="pForm().stock" (ngModelChange)="setPStock($event)" [ngModelOptions]="{standalone:true}" />
-          </label>
-        </div>
-        <div class="row">
-          <label>Categoría
-            <select name="p_categoria" [ngModel]="pForm().categoria" (ngModelChange)="setPCategoria($event)" [ngModelOptions]="{standalone:true}">
-              <option *ngFor="let c of categorias" [value]="c">{{ c }}</option>
-            </select>
-          </label>
-          <label>Activo
-            <select name="p_activo" [ngModel]="pForm().activo" (ngModelChange)="setPActivo($event)" [ngModelOptions]="{standalone:true}">
-              <option [ngValue]="true">Sí</option>
-              <option [ngValue]="false">No</option>
-            </select>
-          </label>
-        </div>
-        <div class="row">
-          <label>IVA (taxRate)
-            <input type="number" step="0.01" name="p_tax" [ngModel]="pForm().taxRate" (ngModelChange)="setPTax($event)" [ngModelOptions]="{standalone:true}" />
-          </label>
-          <label>Foto
-            <input type="file" accept="image/*" (change)="onPickImage($any($event.target).files?.[0] || null)" />
-          </label>
-        </div>
-        <div class="actions">
-          <button type="submit" [disabled]="pLoading()">Guardar</button>
-          <button type="button" class="outline" (click)="clearProductForm()">Limpiar</button>
-        </div>
-        <p class="error" *ngIf="pError()">{{ pError() }}</p>
-      </form>
-    </section>
-
-    <!-- ===== Usuarios ===== -->
-    <section class="card">
-      <h3>Usuarios (Vendedores)</h3>
-      <form (submit)="saveUser(); $event.preventDefault()">
-        <div class="row">
-          <label>Nombre
-            <input name="u_name" [ngModel]="uForm().name" (ngModelChange)="setUName($event)" [ngModelOptions]="{standalone:true}" />
-          </label>
-          <label>Email
-            <input type="email" name="u_email" [ngModel]="uForm().email" (ngModelChange)="setUEmail($event)" [ngModelOptions]="{standalone:true}" />
-          </label>
-        </div>
-        <div class="row">
-          <label>Rol
-            <select name="u_role" [ngModel]="uForm().role" (ngModelChange)="setURole($event)" [ngModelOptions]="{standalone:true}">
-              <option value="CASHIER">CASHIER</option>
-              <option value="ADMIN">ADMIN</option>
-            </select>
-          </label>
-          <label>Contraseña
-            <input type="password" name="u_pass" [ngModel]="uForm().password" (ngModelChange)="setUPass($event)" [ngModelOptions]="{standalone:true}" placeholder="(dejar vacío para no cambiar)"/>
-          </label>
-        </div>
-        <div class="actions">
-          <button type="submit" [disabled]="uLoading()">Guardar</button>
-          <button type="button" class="outline" (click)="clearUserForm()">Limpiar</button>
-        </div>
-        <p class="error" *ngIf="uError()">{{ uError() }}</p>
-      </form>
-    </section>
+  <!-- ── Tabs ── -->
+  <div class="tabs">
+    <button class="tab-btn" [class.active]="activeTab==='products'" (click)="activeTab='products'">
+      🗂️ Productos
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='users'" (click)="activeTab='users'">
+      👥 Usuarios
+    </button>
   </div>
-</section>
+
+  <!-- ══════════════════════ TAB PRODUCTOS ══════════════════════ -->
+  <div class="tab-content" *ngIf="activeTab==='products'">
+
+    <!-- Formulario -->
+    <div class="card">
+      <p class="card-title">
+        {{ pForm().id ? '✏️ Editar producto' : '➕ Nuevo producto' }}
+      </p>
+
+      <div class="product-form">
+
+        <!-- Fila 1: Nombre (ancho completo) -->
+        <div class="form-row full">
+          <div class="field">
+            <label>Nombre *</label>
+            <input type="text" placeholder="Ej. Capuchino"
+              [ngModel]="pForm().nombre" (ngModelChange)="setPNombre($event)" />
+          </div>
+        </div>
+
+        <!-- Fila 2: Código SKU + Precio -->
+        <div class="form-row">
+          <div class="field">
+            <label>Código SKU *</label>
+            <input type="text" placeholder="Ej. CAF001"
+              [ngModel]="pForm().codigo" (ngModelChange)="setPCodigo($event)" />
+          </div>
+          <div class="field">
+            <label>Precio ($)</label>
+            <input type="number" min="0" step="0.01" placeholder="0.00"
+              [ngModel]="pForm().precio" (ngModelChange)="setPPrecio($event)" />
+          </div>
+        </div>
+
+        <!-- Fila 3: Categoría + Stock -->
+        <div class="form-row">
+          <div class="field">
+            <label>Categoría</label>
+            <select [ngModel]="pForm().categoria" (ngModelChange)="setPCategoria($event)">
+              <option *ngFor="let c of categorias" [value]="c">
+                {{ getCategoryIcon(c) }} {{ c }}
+              </option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Stock</label>
+            <input type="number" min="0" placeholder="0"
+              [ngModel]="pForm().stock" (ngModelChange)="setPStock($event)" />
+          </div>
+        </div>
+
+        <!-- Fila 4: IVA + Estado -->
+        <div class="form-row">
+          <div class="field">
+            <label>IVA (ej: 0.16)</label>
+            <input type="number" min="0" max="1" step="0.01" placeholder="0.16"
+              [ngModel]="pForm().taxRate" (ngModelChange)="setPTax($event)" />
+          </div>
+          <div class="field">
+            <label>Estado</label>
+            <select [ngModel]="pForm().activo" (ngModelChange)="setPActivo($event === 'true' || $event === true)">
+              <option [value]="true">✅ Activo</option>
+              <option [value]="false">⛔ Inactivo</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Fila 5: Foto (ancho completo) -->
+        <div class="form-row full">
+          <div class="field">
+            <label>Foto del producto</label>
+            <input type="file" accept="image/*"
+              (change)="onPickImage($any($event.target).files[0] ?? null)" />
+          </div>
+        </div>
+
+        <!-- Error -->
+        <p class="error-msg" *ngIf="pError()">{{ pError() }}</p>
+
+        <!-- Acciones -->
+        <div class="form-actions">
+          <button class="btn btn-outline" (click)="clearProductForm()">Limpiar</button>
+          <button class="btn btn-primary" [disabled]="pLoading()" (click)="saveProduct()">
+            {{ pLoading() ? 'Guardando…' : pForm().id ? 'Actualizar' : 'Crear producto' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="card table-card">
+      <div class="table-header">
+        <span class="table-title">Productos</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="table-count">{{ productos().length }}</span>
+          <button class="btn btn-outline" style="padding:6px 12px;font-size:12px" (click)="loadProducts()">
+            ↺ Recargar
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="pLoading()" class="empty-state">
+        <div class="icon">⏳</div><p>Cargando…</p>
+      </div>
+
+      <div class="table-wrap" *ngIf="!pLoading()">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Nombre</th>
+              <th>SKU</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Cat.</th>
+              <th>Activo</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of productos()">
+              <td>
+                <div class="thumb-wrap">
+                  <img *ngIf="p.imageUrl" [src]="p.imageUrl" [alt]="p.nombre"
+                       (error)="$any($event.target).style.display='none'" />
+                  <span class="thumb-emoji" *ngIf="!p.imageUrl">{{ getCategoryIcon(p.categoria) }}</span>
+                </div>
+              </td>
+              <td><strong>{{ p.nombre }}</strong></td>
+              <td style="color:#9ca3af;font-size:12px">{{ p.codigo }}</td>
+              <td>${{ p.precio | number:'1.2-2' }}</td>
+              <td [class.stock-low]="p.stock <= 5">{{ p.stock }}</td>
+              <td>{{ getCategoryIcon(p.categoria) }} {{ p.categoria }}</td>
+              <td>
+                <span class="badge" [class.badge-green]="p.activo" [class.badge-gray]="!p.activo">
+                  {{ p.activo ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="icon-btn edit" (click)="editProduct(p)" title="Editar">✏️</button>
+                  <button class="icon-btn delete" (click)="deleteProduct(p._id, p.nombre)" title="Eliminar">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="empty-state" *ngIf="productos().length === 0">
+          <div class="icon">🗂️</div>
+          <p>No hay productos aún</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════ TAB USUARIOS ══════════════════════ -->
+  <div class="tab-content" *ngIf="activeTab==='users'">
+
+    <!-- Formulario usuario -->
+    <div class="card">
+      <p class="card-title">
+        {{ uForm().id ? '✏️ Editar usuario' : '➕ Nuevo usuario' }}
+      </p>
+
+      <div class="product-form">
+
+        <div class="form-row full">
+          <div class="field">
+            <label>Nombre *</label>
+            <input type="text" placeholder="Ej. María López"
+              [ngModel]="uForm().name" (ngModelChange)="setUName($event)" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Email {{ uForm().id ? '(sin cambios)' : '*' }}</label>
+            <input type="email" placeholder="correo@ejemplo.com"
+              [disabled]="!!uForm().id"
+              [ngModel]="uForm().email" (ngModelChange)="setUEmail($event)" />
+          </div>
+          <div class="field">
+            <label>Contraseña {{ uForm().id ? '(opcional)' : '*' }}</label>
+            <input type="password" placeholder="••••••••"
+              [ngModel]="uForm().password" (ngModelChange)="setUPass($event)" />
+          </div>
+        </div>
+
+        <div class="form-row full">
+          <div class="field">
+            <label>Rol</label>
+            <select [ngModel]="uForm().role" (ngModelChange)="setURole($event)">
+              <option value="ADMIN">🔑 Administrador</option>
+              <option value="CASHIER">👷 Cajero</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="error-msg" *ngIf="uError()">{{ uError() }}</p>
+
+        <div class="form-actions">
+          <button class="btn btn-outline" (click)="clearUserForm()">Limpiar</button>
+          <button class="btn btn-primary" [disabled]="uLoading()" (click)="saveUser()">
+            {{ uLoading() ? 'Guardando…' : uForm().id ? 'Actualizar' : 'Crear usuario' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Tabla usuarios -->
+    <div class="card table-card">
+      <div class="table-header">
+        <span class="table-title">Usuarios</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="table-count">{{ users().length }}</span>
+          <button class="btn btn-outline" style="padding:6px 12px;font-size:12px" (click)="loadUsers()">
+            ↺ Recargar
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="uLoading()" class="empty-state">
+        <div class="icon">⏳</div><p>Cargando…</p>
+      </div>
+
+      <div class="table-wrap" *ngIf="!uLoading()">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of users()">
+              <td><strong>{{ u.name }}</strong></td>
+              <td style="color:#6b7280;font-size:12px">{{ u.email }}</td>
+              <td>
+                <span class="badge"
+                  [class.badge-orange]="u.role==='ADMIN'"
+                  [class.badge-blue]="u.role==='CASHIER'">
+                  {{ u.role === 'ADMIN' ? '🔑 Admin' : '👷 Cajero' }}
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="icon-btn edit" (click)="editUser(u)" title="Editar">✏️</button>
+                  <button class="icon-btn delete" (click)="deleteUser(u.id, u.name)" title="Eliminar">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="empty-state" *ngIf="users().length === 0">
+          <div class="icon">👥</div>
+          <p>No hay usuarios aún</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

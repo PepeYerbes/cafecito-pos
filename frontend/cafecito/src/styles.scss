@@ -1,160 +1,346 @@
-/* ---------------------------------------
-   Angular Material Theming + Cafecito Feliz
-   Archivo: src/styles.scss
-   --------------------------------------- */
+/* ═══════════════════════════════════════════════════════
+   styles.scss — Cafecito Feliz POS
+   ═══════════════════════════════════════════════════════ */
 
-/* 1) Import Sass API de Angular Material */
+/* 1) @use SIEMPRE primero */
 @use '@angular/material' as mat;
 
-
-/* 2) Paleta de marca (variables CSS para uso general) */
+/* 2) Paleta de marca como variables CSS */
 :root {
-  --ink-black: #04151f;
-  --dark-slate-grey: #183a37;
-  --wheat: #efd6ac;
-  --burnt-orange: #c44900;
-  --midnight-violet: #432534;
+  --ink-black:      #04151f;
+  --dark-slate:     #183a37;
+  --wheat:          #efd6ac;
+  --burnt-orange:   #c44900;
+  --midnight-violet:#432534;
 
-  /* Derivados utilitarios */
-  --bg-app: #f8f6f3;
-  --surface: #ffffff;
-  --text: var(--ink-black);
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --primary: var(--midnight-violet);
-  --accent: var(--burnt-orange);
-  --success: #065f46;
-  --danger: #b91c1c;
+  /* Derivados */
+  --bg-app:    #f5f2ee;
+  --surface:   #ffffff;
+  --text:      var(--ink-black);
+  --muted:     #6b7280;
+  --border:    #e5e7eb;
+  --primary:   var(--midnight-violet);
+  --accent:    var(--burnt-orange);
+  --success:   #065f46;
+  --danger:    #b91c1c;
+  --warning:   #92400e;
+  --info:      #1e3a5f;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.10);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.12);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.14);
+
+  /* Radios */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
 }
 
-/* 3) Definir paletas Material basadas en tu marca
-      (usamos primary con tu violeta y tertiary con tu naranja) */
-$primary-palette: (
-  50: #f0eef0,
-  100: #e0dce1,
-  200: #c2b9c3,
-  300: #a397a5,
-  400: #856487,
-  500: #432534, // midnigh-violet
-  600: #3b2130,
-  700: #331d2b,
-  800: #2b1926,
-  900: #231521,
-  contrast: (
-    50: #000,
-    100: #000,
-    200: #000,
-    300: #fff,
-    400: #fff,
-    500: #fff,
-    600: #fff,
-    700: #fff,
-    800: #fff,
-    900: #fff
-  )
-);
-
-$tertiary-palette: (
-  50: #fff1ea,
-  100: #ffdccc,
-  200: #ffc7ad,
-  300: #ffb08c,
-  400: #ff9a6c,
-  500: #c44900, // burnt-orange
-  600: #a83f00,
-  700: #8c3500,
-  800: #6f2a00,
-  900: #531f00,
-  contrast: (
-    50: #000,
-    100: #000,
-    200: #000,
-    300: #000,
-    400: #000,
-    500: #fff,
-    600: #fff,
-    700: #fff,
-    800: #fff,
-    900: #fff
-  )
-);
-
-/* 4) Aplicar el tema Material 3 al :root 
-      Nota: typography acepta familia; density: 0 (=default) */
+/* 3) Tema Angular Material */
 html {
   @include mat.theme((
     color: (
-      primary: $primary-palette,
-      tertiary: $tertiary-palette
+      primary: (
+        50: #f0eef0, 100: #e0dce1, 200: #c2b9c3, 300: #a397a5,
+        400: #856487, 500: #432534, 600: #3b2130, 700: #331d2b,
+        800: #2b1926, 900: #231521,
+        contrast: (500: #fff)
+      ),
+      tertiary: (
+        50: #fff1ea, 100: #ffdccc, 200: #ffc7ad, 300: #ffb08c,
+        400: #ff9a6c, 500: #c44900, 600: #a83f00, 700: #8c3500,
+        800: #6f2a00, 900: #531f00,
+        contrast: (500: #fff)
+      )
     ),
     typography: Roboto,
     density: 0
   ));
 }
 
-/* 5) Base global */
-html, body { height: 100%; }
-
+/* 4) Base */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
 body {
-  color-scheme: light;           /* puedes cambiar a: light dark para seguir el sistema */
+  color-scheme: light;
   background-color: var(--bg-app);
   color: var(--text);
-  font: var(--mat-sys-body-medium);
-  margin: 0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-/* 6) Utilidades globales (respetando tu proyecto) */
-.btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: filter .15s ease;
-}
-.btn:hover { filter: brightness(1.05); }
+/* 5) Scrollbar personalizado */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
-.btn.outline {
-  background: transparent;
-  color: var(--primary);
-  border: 1px solid var(--primary);
+/* ═══════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS (MatSnackBar)
+   ═══════════════════════════════════════════════════════ */
+
+/* Base del snackbar */
+.mat-mdc-snack-bar-container {
+  border-radius: var(--radius-md) !important;
+  min-width: 280px !important;
+  max-width: 420px !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+
+  .mdc-snackbar__surface {
+    border-radius: var(--radius-md) !important;
+    padding: 0 !important;
+  }
+
+  .mat-mdc-snack-bar-label {
+    padding: 12px 16px 12px 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .mat-mdc-button {
+    color: rgba(255,255,255,0.85) !important;
+    font-size: 16px !important;
+    min-width: 36px !important;
+    padding: 0 8px !important;
+  }
 }
 
+/* Toast SUCCESS */
+.toast-success .mdc-snackbar__surface {
+  background: #065f46 !important;
+  color: #ecfdf5 !important;
+
+  &::before {
+    content: '✓  ';
+    font-weight: 700;
+    color: #6ee7b7;
+  }
+}
+.toast-success .mat-mdc-snack-bar-label { color: #ecfdf5 !important; }
+
+/* Toast ERROR */
+.toast-error .mdc-snackbar__surface {
+  background: #7f1d1d !important;
+  color: #fee2e2 !important;
+
+  &::before {
+    content: '✕  ';
+    font-weight: 700;
+    color: #fca5a5;
+  }
+}
+.toast-error .mat-mdc-snack-bar-label { color: #fee2e2 !important; }
+
+/* Toast WARNING */
+.toast-warning .mdc-snackbar__surface {
+  background: #78350f !important;
+  color: #fef3c7 !important;
+
+  &::before {
+    content: '⚠  ';
+    font-weight: 700;
+    color: #fcd34d;
+  }
+}
+.toast-warning .mat-mdc-snack-bar-label { color: #fef3c7 !important; }
+
+/* Toast INFO */
+.toast-info .mdc-snackbar__surface {
+  background: #1e3a5f !important;
+  color: #dbeafe !important;
+
+  &::before {
+    content: 'ℹ  ';
+    font-weight: 700;
+    color: #93c5fd;
+  }
+}
+.toast-info .mat-mdc-snack-bar-label { color: #dbeafe !important; }
+
+/* ═══════════════════════════════════════════════════════
+   UTILIDADES GLOBALES
+   ═══════════════════════════════════════════════════════ */
+
+/* Cards */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
-.badge {
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  text-align: center;
-  border: 1px solid var(--border);
-}
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
 
-.link { color: var(--primary); text-decoration: none; }
-.muted { color: var(--muted); }
+  &:hover { background: #a33c00; }
+  &:active { transform: scale(0.97); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
 
-/* 7) Helpers extra que usamos en POS */
-.h-screen { height: 100vh; }
-.min-h-screen { min-height: 100vh; }
+  &.outline {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    &:hover { background: rgba(67,37,52,0.06); }
+  }
 
-/* 8) (Opcional) Modo oscuro-lite con prefers-color-scheme */
-/*
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-app: #0b0f14;
-    --surface: #0f1720;
-    --text: #f1f5f9;
-    --muted: #94a3b8;
-    --border: #1f2937;
+  &.ghost {
+    background: transparent;
+    color: var(--muted);
+    &:hover { background: var(--border); color: var(--text); }
+  }
+
+  &.danger {
+    background: var(--danger);
+    &:hover { background: #9b1414; }
+  }
+
+  &.success {
+    background: var(--success);
+    &:hover { background: #054e38; }
   }
 }
-*/
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+
+  &.badge-success { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+  &.badge-danger  { background: #fef2f2; color: #7f1d1d; border-color: #fca5a5; }
+  &.badge-warning { background: #fffbeb; color: #78350f; border-color: #fcd34d; }
+  &.badge-info    { background: #eff6ff; color: #1e3a5f; border-color: #93c5fd; }
+  &.badge-primary { background: #f5f0f2; color: var(--primary); border-color: #c2b9c3; }
+}
+
+/* Form inputs */
+.form-field {
+  display: grid;
+  gap: 5px;
+
+  label {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--dark-slate);
+  }
+
+  input, select, textarea {
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67,37,52,0.12);
+    }
+  }
+}
+
+/* Link */
+.link { color: var(--primary); text-decoration: none; font-weight: 500; }
+.link:hover { text-decoration: underline; }
+.muted { color: var(--muted); }
+
+/* Loading spinner helper */
+.loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  color: var(--muted);
+  gap: 10px;
+}
+
+/* Divider */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 12px 0;
+}
+
+/* Product image placeholder */
+.product-img-placeholder {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--wheat) 0%, #f9efe2 100%);
+  border-radius: var(--radius-sm);
+  font-size: 28px;
+  margin-bottom: 4px;
+  user-select: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CHECKOUT MODAL OVERLAY
+   ═══════════════════════════════════════════════════════ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4,21,31,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  min-width: 340px;
+  max-width: 460px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAT OVERRIDES (densidad y estilo)
+   ═══════════════════════════════════════════════════════ */
+.mat-mdc-form-field { width: 100%; }
+.mat-mdc-raised-button { text-transform: none !important; }
+.mat-mdc-button { text-transform: none !important; }
