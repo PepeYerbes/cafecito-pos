@@ -63,6 +63,10 @@ export class PosPageComponent implements OnInit, OnDestroy {
   // Ticket post-venta
   lastSaleId = signal<string | null>(null);
 
+  // ✅ Sidebar auto-hide
+  sidebarCollapsed = signal<boolean>(false);
+  private hideTimer: ReturnType<typeof setTimeout> | null = null;
+
   private sub = new Subscription();
 
   ngOnInit(): void {
@@ -86,10 +90,33 @@ export class PosPageComponent implements OnInit, OnDestroy {
         }
       })
     );
+
+    // ✅ Auto-ocultar sidebar tras 3 segundos
+    this.startHideTimer();
   }
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    this.clearHideTimer();
+  }
+
+  // ── Sidebar auto-hide ──────────────────────────
+  startHideTimer() {
+    this.clearHideTimer();
+    this.hideTimer = setTimeout(() => this.sidebarCollapsed.set(true), 3000);
+  }
+
+  clearHideTimer() {
+    if (this.hideTimer) { clearTimeout(this.hideTimer); this.hideTimer = null; }
+  }
+
+  showSidebar() {
+    this.sidebarCollapsed.set(false);
+    this.clearHideTimer();
+  }
+
+  hideSidebarDelayed() {
+    this.startHideTimer();
   }
 
   goOpenShift()  { this.router.navigate(['/pos/open-shift']);  }
@@ -124,9 +151,11 @@ export class PosPageComponent implements OnInit, OnDestroy {
   cancelCheckout() { this.showCheckout.set(false); }
 
   confirmSale() {
+    // ✅ Incluye nota por ítem para la orden de cocina
     const items = this.posState.items().map(it => ({
       productId: it.producto._id,
-      quantity:  it.qty
+      quantity:  it.qty,
+      note:      it.note || ''
     }));
 
     const disc  = Number(this.discount()) || 0;
@@ -180,6 +209,24 @@ export class PosPageComponent implements OnInit, OnDestroy {
         this.toast.success('Ticket descargado');
       },
       error: () => this.toast.error('No se pudo descargar el ticket')
+    });
+  }
+
+  /** ✅ Descarga el ticket de cocina con token JWT */
+  downloadKitchenTicket() {
+    const id = this.lastSaleId();
+    if (!id) return;
+    this.api.getKitchenTicketPdf(id).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = `cocina-${id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.toast.success('Ticket de cocina descargado');
+      },
+      error: () => this.toast.error('No se pudo descargar el ticket de cocina')
     });
   }
 

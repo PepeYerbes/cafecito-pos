@@ -1,8 +1,17 @@
 <!-- src/app/features/pos/pages/pos-page/pos-page.html -->
+<!-- ═══════ ZONA DE HOVER para re-abrir sidebar ═══════ -->
+<div class="sidebar-hover-zone"
+     *ngIf="sidebarCollapsed()"
+     (mouseenter)="showSidebar()">
+</div>
+
 <section class="layout">
 
   <!-- ═══════ SIDEBAR ═══════ -->
-  <aside class="sidebar">
+  <aside class="sidebar"
+         [class.collapsed]="sidebarCollapsed()"
+         (mouseenter)="showSidebar()"
+         (mouseleave)="hideSidebarDelayed()">
     <div class="brand">
       <span class="logo">☕</span>
       <div class="title">
@@ -246,5 +255,6 @@
   <span>✅ Venta registrada —</span>
   <button class="ticket-link" (click)="openTicket()">Ver ticket</button>
   <button class="ticket-link" (click)="downloadTicket()">Descargar PDF</button>
+  <button class="ticket-link" (click)="downloadKitchenTicket()">🍳 Ticket cocina</button>
   <button class="ticket-dismiss" (click)="dismissTicket()">✕</button>
 </div>

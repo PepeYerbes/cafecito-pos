@@ -18,15 +18,9 @@ export class PosApiService {
   getCurrentCash() {
     return this.http.get<CashSession>(`${this.base}/cash/register/current`);
   }
-  addCashMovement(
-    type: 'INGRESO' | 'EGRESO' | 'IN' | 'OUT',
-    amount: number,
-    reason?: string
-  ) {
+  addCashMovement(type: 'INGRESO'|'EGRESO'|'IN'|'OUT', amount: number, reason?: string) {
     const mappedType = type === 'IN' ? 'INGRESO' : type === 'OUT' ? 'EGRESO' : type;
-    return this.http.post<CashSession>(`${this.base}/cash/register/movement`, {
-      type: mappedType, amount, reason
-    });
+    return this.http.post<CashSession>(`${this.base}/cash/register/movement`, { type: mappedType, amount, reason });
   }
   closeCash(countedCash: number, notes?: string) {
     return this.http.post<CashSession>(`${this.base}/cash/register/close`, { countedCash, notes });
@@ -35,9 +29,7 @@ export class PosApiService {
     return this.http.get<CashSession>(`${this.base}/cash/register/${id}/report?format=json`);
   }
   downloadCashPdf(id: string) {
-    return this.http.get(`${this.base}/cash/register/${id}/report?format=pdf`, {
-      responseType: 'blob'
-    });
+    return this.http.get(`${this.base}/cash/register/${id}/report?format=pdf`, { responseType: 'blob' });
   }
   getCloseHistory(opts?: { page?: number; pageSize?: number; from?: string; to?: string }) {
     const params = new URLSearchParams();
@@ -45,14 +37,14 @@ export class PosApiService {
     if (opts?.pageSize) params.set('pageSize', String(opts.pageSize));
     if (opts?.from)     params.set('from',     opts.from);
     if (opts?.to)       params.set('to',       opts.to);
-    const qs = params.toString();
+    const qs  = params.toString();
     const url = `${this.base}/cash/register/history${qs ? '?' + qs : ''}`;
     return this.http.get<{ total: number; page: number; pageSize: number; items: any[] }>(url);
   }
 
   // ===== Ventas =====
   createSale(payload: {
-    items: { productId: string; quantity: number }[];
+    items: { productId: string; quantity: number; note?: string }[];
     paidWith: PaidWith;
     discount?: number;
     notes?: string;
@@ -61,9 +53,14 @@ export class PosApiService {
     return this.http.post<Sale>(`${this.base}/sales`, payload);
   }
 
-  /** Descarga el ticket PDF de una venta como Blob */
+  /** Ticket PDF de la venta (para el cliente) */
   getSaleTicketPdf(saleId: string) {
     return this.http.get(`${this.base}/sales/${saleId}/ticket`, { responseType: 'blob' });
+  }
+
+  /** ✅ Ticket PDF de cocina */
+  getKitchenTicketPdf(saleId: string) {
+    return this.http.get(`${this.base}/sales/${saleId}/kitchen-ticket`, { responseType: 'blob' });
   }
 
   cancelSale(saleId: string) {
