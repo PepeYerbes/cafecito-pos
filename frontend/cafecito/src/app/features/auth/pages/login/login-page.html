@@ -1,36 +1,81 @@
-<section class="login-container">
-  <h2>Cafecito Feliz — Iniciar sesión</h2>
+<!-- src/app/features/auth/pages/login/login-page.html -->
+<div class="login-bg">
 
-  <form (submit)="submit($event)">
-    <label>
-      Correo
-      <input
-        type="email"
-        name="email"
-        [ngModel]="email()"
-        (ngModelChange)="email.set($event)"
-        [ngModelOptions]="{standalone:true}"
-        required
-      />
-    </label>
+  <section class="login-card">
 
-    <label>
-      Contraseña
-      <input
-        type="password"
-        name="password"
-        [ngModel]="password()"
-        (ngModelChange)="password.set($event)"
-        [ngModelOptions]="{standalone:true}"
-        required
-      />
-    </label>
+    <!-- ── Logo + Branding ── -->
+    <div class="brand">
+      <div class="logo-wrap">
+        <img src="../../../../../../public/logo.png" alt="Cafecito Feliz"
+             class="logo-img"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+        <div class="logo-fallback" style="display:none">☕</div>
+      </div>
+      <h1 class="brand-name">Cafecito Feliz</h1>
+      <p class="brand-sub">Punto de Venta</p>
+    </div>
 
-    <button type="submit" [disabled]="loading()">Entrar</button>
-    <p class="error" *ngIf="error()">{{ error() }}</p>
-  </form>
+    <!-- ── Divider ── -->
+    <div class="divider">
+      <span>Iniciar sesión</span>
+    </div>
 
-  <p class="muted">
-    ¿Olvidaste tu contraseña? Contacta a un administrador.
-  </p>
-</section>
+    <!-- ── Form ── -->
+    <form (submit)="submit($event)" class="login-form" novalidate>
+
+      <div class="field">
+        <label for="email">Correo electrónico</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="usuario@cafecito.com"
+            autocomplete="email"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            [ngModelOptions]="{standalone:true}"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            [ngModelOptions]="{standalone:true}"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="error-box" *ngIf="error()">
+        <span>⚠️</span> {{ error() }}
+      </div>
+
+      <button type="submit" class="submit-btn" [disabled]="loading()">
+        <span *ngIf="!loading()">Entrar →</span>
+        <span *ngIf="loading()" class="spinner">Verificando…</span>
+      </button>
+
+    </form>
+
+    <!-- ── Footer ── -->
+    <p class="login-footer">
+      ¿Olvidaste tu contraseña? Contacta a un administrador.
+    </p>
+
+  </section>
+
+</div>

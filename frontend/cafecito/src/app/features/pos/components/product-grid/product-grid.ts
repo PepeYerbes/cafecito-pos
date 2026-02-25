@@ -18,10 +18,11 @@ export class ProductGridComponent {
     const map: Record<string, string> = {
       'Café':   '☕',
       'Té':     '🍵',
-      'Frappé': '🧋',
+      'Frappé': '🍦',
       'Postre': '🍰',
       'Snack':  '🥐',
-      'Otro':   '🛍️'
+      'Alimentos':   '🥞',
+      'Bebidas Frias':   '🧊'
     };
     return map[categoria] ?? '🛍️';
   }

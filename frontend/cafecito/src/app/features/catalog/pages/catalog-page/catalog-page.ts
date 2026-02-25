@@ -39,7 +39,7 @@ export class CatalogPageComponent implements OnInit {
   maxPrecio?: number;
   activo: boolean | undefined = true;
 
-  categorias = ['Café', 'Té', 'Frappé', 'Postre', 'Snack', 'Otro'];
+  categorias = ['Café', 'Té', 'Frappé', 'Postre', 'Snack', 'Alimentos', 'Bebidas Frias'];
 
   constructor(private productosService: ProductosService) {}
 
