@@ -2,140 +2,138 @@
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 
-function money(n) {
-  return `$${(Number(n) || 0).toFixed(2)}`;
-}
+const PAGE_W = 226;   // 80mm en puntos
+const MARGIN = 10;
+const COL    = PAGE_W - MARGIN * 2;   // 206pt area util
 
-/**
- * Genera y hace stream del PDF de ticket de venta a la respuesta HTTP.
- * @param {import('express').Response} res
- * @param {{ sale: object, store?: { name: string, address: string } }} options
- */
-export async function buildSaleTicketPDF(res, {
-  sale,
-  store = { name: 'Cafecito Feliz', address: 'Sucursal única' }
-}) {
-  // Generar QR antes de iniciar el stream del PDF
-  const qrDataURL = await QRCode.toDataURL(`sale:${sale._id}`);
-  const qrBuffer = Buffer.from(qrDataURL.split(',')[1], 'base64');
+const SEP = '-'.repeat(32);           // ASCII puro — sin caracteres especiales
+
+const PAYMENT_LABELS = {
+  CASH:  'Efectivo',
+  CARD:  'Tarjeta',
+  MIXED: 'Mixto'
+};
+
+export async function buildSaleTicketPDF(res, { sale, store = {} }) {
+  const qrBuffer = await QRCode.toBuffer(String(sale._id), { width: 70, margin: 1 });
 
   const doc = new PDFDocument({
-    size: [226, 700],   // 80mm de ancho en puntos ≈ 226pt; alto flexible
-    margin: 10,
-    autoFirstPage: true,
-    bufferPages: false
+    size:    [PAGE_W, 900],
+    margins: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN },
+    autoFirstPage: true
   });
 
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `inline; filename=ticket_${sale._id}.pdf`);
+  res.setHeader('Content-Disposition', `inline; filename="ticket-${sale._id}.pdf"`);
   doc.pipe(res);
 
-  const PAGE_W = 226;
-  const COL_L = 10;
-  const COL_R = PAGE_W - 10;
-  const LINE_W = PAGE_W - 20;
+  const storeName = store.name    || process.env.STORE_NAME    || 'Cafecito Feliz';
+  const storeAddr = store.address || process.env.STORE_ADDRESS || 'Sucursal unica';
+  const now       = new Date(sale.createdAt || Date.now())
+                      .toLocaleString('es-MX', { hour12: true });
 
-  // ─────────────────────────────────────────
-  // CABECERA
-  // ─────────────────────────────────────────
-  doc.fontSize(11).font('Helvetica-Bold')
-    .text(store.name, COL_L, 12, { width: LINE_W, align: 'center' });
+  // ── Header ──────────────────────────────────
+  doc.fontSize(13).font('Helvetica-Bold')
+     .text(storeName, MARGIN, MARGIN, { width: COL, align: 'center' });
+  doc.moveDown(0.2);
   doc.fontSize(8).font('Helvetica')
-    .text(store.address, COL_L, doc.y, { width: LINE_W, align: 'center' });
-
-  doc.moveDown(0.3);
-  doc.fontSize(7)
-    .text(`Fecha: ${new Date(sale.createdAt).toLocaleString('es-MX')}`, { width: LINE_W, align: 'center' })
-    .text(`Cajero: ${sale.userId || '—'}`, { width: LINE_W, align: 'center' })
-    .text(`Folio: ${sale._id}`, { width: LINE_W, align: 'center' });
-
-  doc.moveDown(0.4);
-  doc.moveTo(COL_L, doc.y).lineTo(COL_R, doc.y).lineWidth(0.5).stroke();
-  doc.moveDown(0.3);
-
-  // ─────────────────────────────────────────
-  // DETALLE DE ÍTEMS
-  // ─────────────────────────────────────────
-  doc.fontSize(8).font('Helvetica-Bold')
-    .text('Artículo', COL_L, doc.y, { width: 100 })
-    .text('Cant', COL_L + 100, doc.y - doc.currentLineHeight(), { width: 30, align: 'right' })
-    .text('Total', COL_L + 130, doc.y - doc.currentLineHeight(), { width: LINE_W - 130, align: 'right' });
-  doc.font('Helvetica');
-  doc.moveDown(0.2);
-  doc.moveTo(COL_L, doc.y).lineTo(COL_R, doc.y).lineWidth(0.3).stroke();
-  doc.moveDown(0.2);
-
-  for (const it of (sale.items || [])) {
-    const lineY = doc.y;
-    doc.fontSize(8)
-      .text(it.name || '—', COL_L, lineY, { width: 98 });
-    doc.text(`x${it.quantity}`, COL_L + 100, lineY, { width: 28, align: 'right' });
-    doc.text(money(it.total), COL_L + 130, lineY, { width: LINE_W - 130, align: 'right' });
-    doc.moveDown(0.15);
-
-    // Precio unitario en gris (línea extra)
-    doc.fontSize(6.5).fillColor('#555')
-      .text(`  P.U.: ${money(it.unitPrice)}  Sub: ${money(it.subtotal)}  IVA: ${money(it.tax)}`,
-        COL_L, doc.y, { width: LINE_W });
-    doc.fillColor('#000').moveDown(0.3);
-  }
-
-  // ─────────────────────────────────────────
-  // TOTALES
-  // ─────────────────────────────────────────
-  doc.moveDown(0.2);
-  doc.moveTo(COL_L, doc.y).lineTo(COL_R, doc.y).lineWidth(0.5).stroke();
-  doc.moveDown(0.3);
-
-  const rows = [
-    ['Subtotal', money(sale.gross)],
-    ['IVA', money(sale.taxes)],
-  ];
-  if (Number(sale.discount) > 0) rows.push(['Descuento', `-${money(sale.discount)}`]);
-
-  for (const [label, val] of rows) {
-    const ty = doc.y;
-    doc.fontSize(8).text(label, COL_L, ty, { width: 100 });
-    doc.text(val, COL_L + 100, ty, { width: LINE_W - 100, align: 'right' });
-    doc.moveDown(0.25);
-  }
-
+     .text(storeAddr, MARGIN, doc.y, { width: COL, align: 'center' });
   doc.moveDown(0.1);
-  doc.moveTo(COL_L, doc.y).lineTo(COL_R, doc.y).lineWidth(0.5).stroke();
+  doc.text(now, MARGIN, doc.y, { width: COL, align: 'center' });
   doc.moveDown(0.3);
+  doc.text(SEP, MARGIN, doc.y, { width: COL, align: 'center' });
+  doc.moveDown(0.2);
+  doc.fontSize(10).font('Helvetica-Bold')
+     .text(`Folio: ${String(sale._id).slice(-8).toUpperCase()}`,
+           MARGIN, doc.y, { width: COL, align: 'center' });
+  doc.moveDown(0.3);
+  doc.fontSize(7).font('Helvetica')
+     .text(SEP, MARGIN, doc.y, { width: COL, align: 'center' });
 
-  const totalY = doc.y;
-  doc.fontSize(11).font('Helvetica-Bold')
-    .text('TOTAL', COL_L, totalY, { width: 100 });
-  doc.text(money(sale.total), COL_L + 100, totalY, { width: LINE_W - 100, align: 'right' });
-  doc.font('Helvetica').moveDown(0.4);
+  // ── Columnas: nombre(108) cant(20) precio(34) total(38) + gaps = 206 ──
+  const C_NAME  = MARGIN;       // 10
+  const C_QTY   = MARGIN + 110; // 120
+  const C_PRICE = MARGIN + 133; // 143
+  const C_TOTAL = MARGIN + 168; // 178 → 178+38=216 <= 216 ✅
 
-  // Forma de pago
-  doc.fontSize(8).text(`Forma de pago: ${sale.paidWith}`, { width: LINE_W, align: 'center' });
+  // Encabezado tabla
+  doc.moveDown(0.3);
+  let y = doc.y;
+  doc.fontSize(7).font('Helvetica-Bold');
+  doc.text('Producto', C_NAME,  y, { width: 108, lineBreak: false });
+  doc.text('Cant',     C_QTY,   y, { width: 20,  align: 'right', lineBreak: false });
+  doc.text('P.Unit',   C_PRICE, y, { width: 33,  align: 'right', lineBreak: false });
+  doc.text('Total',    C_TOTAL, y, { width: 38,  align: 'right' });
+  doc.fontSize(7).font('Helvetica')
+     .text(SEP, MARGIN, doc.y, { width: COL, align: 'center' });
 
-  if (sale.notes && String(sale.notes).trim()) {
-    doc.moveDown(0.3);
-    doc.fontSize(7).text(`Nota: ${String(sale.notes).trim()}`, { width: LINE_W });
+  // Items
+  for (const it of (sale.items || [])) {
+    y = doc.y;
+    const name  = String(it.name  || '---').substring(0, 19);
+    const qty   = String(it.quantity || 0);
+    const price = `$${Number(it.unitPrice || 0).toFixed(2)}`;
+    const total = `$${Number(it.total     || 0).toFixed(2)}`;
+
+    doc.fontSize(7).font('Helvetica');
+    doc.text(name,  C_NAME,  y, { width: 108, lineBreak: false });
+    doc.text(qty,   C_QTY,   y, { width: 20,  align: 'right', lineBreak: false });
+    doc.text(price, C_PRICE, y, { width: 33,  align: 'right', lineBreak: false });
+    doc.text(total, C_TOTAL, y, { width: 38,  align: 'right' });
+    doc.moveDown(0.2);
   }
 
-  // ─────────────────────────────────────────
-  // QR CODE
-  // ─────────────────────────────────────────
-  doc.moveDown(0.6);
-  doc.moveTo(COL_L, doc.y).lineTo(COL_R, doc.y).lineWidth(0.3).stroke();
+  // ── Totales ──────────────────────────────────
+  doc.fontSize(7).font('Helvetica')
+     .text(SEP, MARGIN, doc.y, { width: COL, align: 'center' });
+  doc.moveDown(0.2);
+
+  const totalRow = (label, value, bold = false) => {
+    const font = bold ? 'Helvetica-Bold' : 'Helvetica';
+    const size = bold ? 9 : 7;
+    y = doc.y;
+    doc.fontSize(size).font(font);
+    doc.text(label, MARGIN,       y, { width: 120,        lineBreak: false });
+    doc.text(value, MARGIN + 120, y, { width: COL - 120,  align: 'right' });
+    doc.moveDown(bold ? 0.25 : 0.15);
+  };
+
+  totalRow('Subtotal',  `$${Number(sale.gross    || 0).toFixed(2)}`);
+  totalRow('IVA',       `$${Number(sale.taxes    || 0).toFixed(2)}`);
+  if (Number(sale.discount) > 0) {
+    totalRow('Descuento', `-$${Number(sale.discount).toFixed(2)}`);
+  }
+  totalRow('TOTAL', `$${Number(sale.total || 0).toFixed(2)}`, true);
+
+  // Forma de pago — texto plano, sin emojis
+  doc.moveDown(0.2);
+  const payLabel = PAYMENT_LABELS[sale.paidWith] || (sale.paidWith || 'N/A');
+  doc.fontSize(7).font('Helvetica')
+     .text(`Forma de pago: ${payLabel}`, MARGIN, doc.y, { width: COL, align: 'center' });
+
+  // ── QR ───────────────────────────────────────
   doc.moveDown(0.4);
+  doc.fontSize(7).font('Helvetica')
+     .text(SEP, MARGIN, doc.y, { width: COL, align: 'center' });
+  doc.moveDown(0.3);
 
-  const qrSize = 70;
-  const qrX = (PAGE_W - qrSize) / 2;
-  doc.image(qrBuffer, qrX, doc.y, { width: qrSize, height: qrSize });
-  doc.moveDown(5);
+  const qrSize = 68;
+  const qrX    = MARGIN + Math.floor((COL - qrSize) / 2);
+  const qrY    = doc.y;
+  doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
+  // Avanzar manualmente: PDFKit no actualiza doc.y tras image()
+  doc.y = qrY + qrSize + 8;
 
-  // ─────────────────────────────────────────
-  // PIE
-  // ─────────────────────────────────────────
-  doc.fontSize(7)
-    .text('¡Gracias por su compra!', { width: LINE_W, align: 'center' })
-    .text('Devoluciones con ticket en 7 días.', { width: LINE_W, align: 'center' });
+  // ── Footer ───────────────────────────────────
+  doc.fontSize(7).font('Helvetica')
+     .text(SEP, MARGIN, doc.y, { width: COL, align: 'center' });
+  doc.moveDown(0.2);
+  doc.fontSize(8).font('Helvetica-Bold')
+     .text('Gracias por su compra!', MARGIN, doc.y, { width: COL, align: 'center' });
+  doc.moveDown(0.15);
+  doc.fontSize(6).font('Helvetica')
+     .text('Revise su cambio antes de salir.',
+           MARGIN, doc.y, { width: COL, align: 'center' });
 
   doc.end();
 }

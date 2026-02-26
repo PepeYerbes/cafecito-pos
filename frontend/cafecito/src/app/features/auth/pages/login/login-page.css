@@ -1,10 +1,271 @@
-.login-container {
-  max-width: 360px; margin: 48px auto; padding: 16px; background: #fff;
-  border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 10px;
+/* ═══════════════════════════════════════════════
+   login-page.css — Cafecito Feliz POS
+   ═══════════════════════════════════════════════ */
+
+/* ── Fondo con textura cálida ── */
+.login-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+
+  /* Gradiente cálido tipo café */
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(196, 73, 0, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(67, 37, 52, 0.10) 0%, transparent 55%),
+    linear-gradient(145deg, #fdf6f0 0%, #f5ece4 50%, #ede0d4 100%);
 }
-label { display: grid; gap: 6px; font-weight: 600; }
-input { padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; }
-button { background: var(--primary); color: #fff; padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
-.error { color: #b91c1c; }
-.muted { color: #6b7280; font-size: 12px; }
-.link { color: var(--primary); text-decoration: none; }
+
+/* ── Card principal ── */
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px 36px 32px;
+  box-shadow:
+    0 4px 6px rgba(0,0,0,0.04),
+    0 20px 50px rgba(67, 37, 52, 0.12),
+    0 0 0 1px rgba(196, 73, 0, 0.08);
+  animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+
+/* ── Branding ── */
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.logo-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #fff8f5 0%, #fdeee6 100%);
+  border: 2px solid rgba(196, 73, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(196, 73, 0, 0.15);
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.logo-fallback {
+  font-size: 48px;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: #432534;
+  margin: 0;
+  letter-spacing: -0.02em;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.brand-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c44900;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* ── Divider con texto ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e5d5cc, transparent);
+}
+
+.divider span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #9c7b70;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+/* ── Formulario ── */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #432534;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Input con ícono */
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 13px;
+  font-size: 15px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px 11px 42px;
+  border: 1.5px solid #e8ddd9;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1f2937;
+  background: #fdfaf9;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  font-family: inherit;
+}
+
+.input-wrap input::placeholder {
+  color: #c4b0aa;
+}
+
+.input-wrap input:focus {
+  border-color: #c44900;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(196, 73, 0, 0.1);
+}
+
+/* ── Error ── */
+.error-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fff1f0;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 500;
+  animation: shake 0.35s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+/* ── Botón ── */
+.submit-btn {
+  margin-top: 4px;
+  padding: 13px;
+  background: linear-gradient(135deg, #c44900 0%, #a33b00 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(196, 73, 0, 0.35);
+  font-family: inherit;
+}
+
+.submit-btn:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(196, 73, 0, 0.4);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spinner::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Footer ── */
+.login-footer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: #9c8880;
+  line-height: 1.5;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 32px 24px 28px;
+    border-radius: 16px;
+  }
+  .logo-wrap { width: 72px; height: 72px; }
+  .brand-name { font-size: 20px; }
+}

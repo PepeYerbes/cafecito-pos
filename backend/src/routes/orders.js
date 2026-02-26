@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { auth } from '../middlewares/auth.js';
 import { requireopenCash } from '../middlewares/requireOpenCash.js';
 import Product from '../models/Product.js';
-import KitchenOrder from '../models/KitchenOrder.js';
+import KitchenOrder from '../models/Order.js';
 import Customer from '../models/Customer.js';
 
 const r = Router();

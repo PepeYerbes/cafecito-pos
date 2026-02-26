@@ -2,7 +2,7 @@ export interface Producto {
   _id: string;
   nombre: string;
   precio: number;
-  categoria: 'Café' | 'Té' | 'Frappé' | 'Postre' | 'Snack' | 'Otro';
+  categoria: 'Café' | 'Té' | 'Frappé' | 'Postre' | 'Snack' | 'Alimentos' | 'Bebidas Frias';
   codigo: string;
   stock: number;
   activo: boolean;

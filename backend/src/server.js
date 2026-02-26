@@ -11,7 +11,6 @@ import sessionsRouter from './modules/cashSessions/cashSessions.router.js';
 import authRoutes from './routes/auth.js';
 import usersRoutes from './routes/users.js';
 import customersRoutes from './routes/customers.js';
-import ordersRoutes from './routes/orders.js';
 import { errorHandler } from './middlewares/error-handler.js';
 
 dotenv.config();
@@ -25,7 +24,6 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, time: new Date().toIS
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);         // admin-only
 app.use('/api/customers', customersRoutes); // admin + cashier (según método)
-app.use('/api/orders', ordersRoutes);       // admin + cashier (según método)
 app.use('/api/cash', cashRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/products', productsRoutes);

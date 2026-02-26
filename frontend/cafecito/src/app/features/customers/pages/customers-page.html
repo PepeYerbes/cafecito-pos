@@ -15,29 +15,42 @@
 
   <div class="grid">
     <section class="card">
-      <h3>Crear / Editar</h3>
+      <h3>{{ form()._id ? 'Editar cliente' : 'Nuevo cliente' }}</h3>
       <form (submit)="save(); $event.preventDefault()">
-        <label>Nombre
-          <input [ngModel]="form().name || ''" (ngModelChange)="setFormName($event)" name="name" />
+
+        <label>Nombre *
+          <input [ngModel]="form().name || ''" (ngModelChange)="setFormName($event)"
+                 name="name" placeholder="Ej. María López" />
         </label>
+
         <label>Teléfono
-          <input [ngModel]="form().phone || ''" (ngModelChange)="setFormPhone($event)" name="phone" />
+          <input [ngModel]="form().phone || ''" (ngModelChange)="setFormPhone($event)"
+                 name="phone" placeholder="+521234567890" />
+          <span class="field-hint">Incluye código de país: +52 para México</span>
         </label>
+
         <label>Email
-          <input type="email" [ngModel]="form().email || ''" (ngModelChange)="setFormEmail($event)" name="email" />
+          <input type="email" [ngModel]="form().email || ''" (ngModelChange)="setFormEmail($event)"
+                 name="email" placeholder="correo@ejemplo.com" />
         </label>
+
         <label>Fecha de nacimiento
-          <input type="date" [ngModel]="form().birthdate || ''" (ngModelChange)="setFormBirthdate($event)" name="birthdate" />
+          <input type="date" [ngModel]="form().birthdate || ''" (ngModelChange)="setFormBirthdate($event)"
+                 name="birthdate" />
         </label>
+
         <label>Notas
-          <textarea rows="3" [ngModel]="form().notes || ''" (ngModelChange)="setFormNotes($event)" name="notes"></textarea>
+          <textarea rows="3" [ngModel]="form().notes || ''" (ngModelChange)="setFormNotes($event)"
+                    name="notes" placeholder="Preferencias, alergias, etc."></textarea>
         </label>
+
+        <div class="error-box" *ngIf="error()">⚠ {{ error() }}</div>
+
         <div class="actions">
-          <button type="submit">Guardar</button>
+          <button type="submit" class="btn-primary">{{ form()._id ? 'Actualizar' : 'Guardar' }}</button>
           <button type="button" class="outline" (click)="clear()">Limpiar</button>
         </div>
       </form>
-      <p class="error" *ngIf="error()">{{ error() }}</p>
     </section>
 
     <section class="card">
@@ -47,11 +60,7 @@
       <table class="table" *ngIf="!loading()">
         <thead>
           <tr>
-            <th>Nombre</th>
-            <th>Contacto</th>
-            <th>Puntos</th>
-            <th>Visitas</th>
-            <th></th>
+            <th>Nombre</th><th>Contacto</th><th>Puntos</th><th>Visitas</th><th></th>
           </tr>
         </thead>
         <tbody>
@@ -65,17 +74,10 @@
             <td>{{ c.visitsCount || 0 }}</td>
             <td>
               <button (click)="edit(c)">Editar</button>
-              <!-- ✅ FIX: pasamos c.name como segundo argumento -->
               <button class="danger" (click)="remove(c._id, c.name)">Eliminar</button>
-
               <div class="redeem">
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Puntos a canjear"
-                  [ngModel]="pointsToRedeem()"
-                  (ngModelChange)="pointsToRedeem.set($event)"
-                />
+                <input type="number" min="1" placeholder="Puntos"
+                       [ngModel]="pointsToRedeem()" (ngModelChange)="pointsToRedeem.set($event)" />
                 <button (click)="redeem(c)">Canjear</button>
               </div>
             </td>

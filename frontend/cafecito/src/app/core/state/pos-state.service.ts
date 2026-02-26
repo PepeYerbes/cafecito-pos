@@ -10,10 +10,11 @@ export interface CartItem {
 }
 
 export type CartEvent =
-  | { type: 'added';   name: string; qty: number }
-  | { type: 'removed'; name: string }
-  | { type: 'qty';     name: string; qty: number }
-  | { type: 'cleared' };
+  | { type: 'added';       name: string; qty: number }
+  | { type: 'removed';     name: string }
+  | { type: 'qty';         name: string; qty: number }
+  | { type: 'cleared' }
+  | { type: 'stock_limit'; name: string; stock: number };
 
 @Injectable({ providedIn: 'root' })
 export class PosStateService {
@@ -49,6 +50,12 @@ export class PosStateService {
     if (had) this.cartEvents$.next({ type: 'cleared' });
   }
 
+  /** ✅ Vacía el carrito sin emitir toast — usado al cargar nueva venta */
+  clearSilent() {
+    this._items.set([]);
+    this._focused.set(null);
+  }
+
   setFocusByIndex(index: number) {
     this._focused.set(this._items()[index] ?? null);
   }
@@ -59,7 +66,13 @@ export class PosStateService {
     const isNew = idx < 0;
 
     if (idx >= 0) {
-      arr[idx] = { ...arr[idx], qty: arr[idx].qty + 1 };
+      // ✅ Validar stock antes de incrementar
+      const currentQty = arr[idx].qty;
+      if (currentQty >= p.stock) {
+        this.cartEvents$.next({ type: 'stock_limit', name: p.nombre, stock: p.stock });
+        return;
+      }
+      arr[idx] = { ...arr[idx], qty: currentQty + 1 };
     } else {
       arr.push({ producto: p, qty: 1 });
     }
@@ -115,8 +128,16 @@ export class PosStateService {
     const arr = [...this._items()];
     const idx = arr.findIndex(i => i.producto._id === productId);
     if (idx >= 0) {
-      const newQty = Math.max(0, arr[idx].qty + delta);
-      const name   = arr[idx].producto.nombre;
+      const item   = arr[idx];
+      const newQty = Math.max(0, item.qty + delta);
+      const name   = item.producto.nombre;
+
+      // ✅ Validar stock al incrementar
+      if (delta > 0 && newQty > item.producto.stock) {
+        this.cartEvents$.next({ type: 'stock_limit', name, stock: item.producto.stock });
+        return;
+      }
+
       if (newQty === 0) {
         arr.splice(idx, 1);
         this.cartEvents$.next({ type: 'removed', name });

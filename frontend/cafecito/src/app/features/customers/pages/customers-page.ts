@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CustomersService, Customer } from '../../../core/services/customers.service';
 import { ToastService } from '../../../core/services/toast.service';
+
 type CustomersListResponse = {
   data: Customer[]; page: number; limit: number;
   total: number; totalPages: number;
@@ -17,10 +18,10 @@ type CustomersListResponse = {
   styleUrls: ['./customers-page.css']
 })
 export class CustomersPageComponent implements OnInit {
-  q      = signal<string>('');
-  items  = signal<Customer[]>([]);
-  page   = signal<number>(1);
-  pages  = signal<number>(1);
+  q       = signal<string>('');
+  items   = signal<Customer[]>([]);
+  page    = signal<number>(1);
+  pages   = signal<number>(1);
   loading = signal<boolean>(false);
   error   = signal<string | null>(null);
 
@@ -57,9 +58,14 @@ export class CustomersPageComponent implements OnInit {
 
   edit(c: Customer) {
     this.form.set({ _id: c._id, name: c.name, phone: c.phone, email: c.email, birthdate: c.birthdate, notes: c.notes });
+    this.error.set(null);
     this.toast.info(`Editando: ${c.name}`);
   }
-  clear() { this.form.set({ _id: undefined, name: '', phone: '', email: '', birthdate: '', notes: '' }); }
+
+  clear() {
+    this.form.set({ _id: undefined, name: '', phone: '', email: '', birthdate: '', notes: '' });
+    this.error.set(null);
+  }
 
   setFormName(v: string)      { this.form.set({ ...this.form(), name:      v }); }
   setFormPhone(v: string)     { this.form.set({ ...this.form(), phone:     v }); }
@@ -68,24 +74,53 @@ export class CustomersPageComponent implements OnInit {
   setFormNotes(v: string)     { this.form.set({ ...this.form(), notes:     v }); }
 
   save() {
+    this.error.set(null);
     const f = this.form();
-    if (!f.name || !f.name.trim()) { this.toast.warning('El nombre es obligatorio'); return; }
 
-    const isEdit = !!f._id;
-    const req$   = isEdit ? this.svc.update(f._id!, f) : this.svc.create(f);
+    // ── Validación en cliente ──────────────────────
+    if (!f.name?.trim()) {
+      this.toast.warning('El nombre es obligatorio');
+      return;
+    }
+
+    if (!f.phone?.trim() && !f.email?.trim()) {
+      this.error.set('Debes ingresar al menos teléfono o email.');
+      this.toast.warning('Ingresa teléfono o email');
+      return;
+    }
+
+    // ✅ Normalizar teléfono: agrega +52 si el usuario escribe solo dígitos mexicanos
+    let phone = f.phone?.trim() || undefined;
+    if (phone) {
+      // Si empieza con 52 sin +, agregar +
+      if (/^52\d{10}$/.test(phone)) phone = '+' + phone;
+      // Si son exactamente 10 dígitos (México), agregar +52
+      else if (/^\d{10}$/.test(phone)) phone = '+52' + phone;
+      // Si tiene + ya, dejarlo como está
+      // Validación final del formato
+      if (!/^\+\d{8,15}$/.test(phone)) {
+        this.error.set('Teléfono inválido. Usa formato +521234567890 (código de país + número).');
+        this.toast.error('Formato de teléfono incorrecto');
+        return;
+      }
+    }
+
+    const payload = { ...f, phone };
+    const isEdit  = !!f._id;
+    const req$    = isEdit ? this.svc.update(f._id!, payload) : this.svc.create(payload);
 
     req$.subscribe({
       next: (c: any) => {
         this.clear();
         this.load();
-        this.toast.success(
-          isEdit
-            ? `✔ Cliente "${c.name}" actualizado`
-            : `✔ Cliente "${c.name}" registrado`
-        );
+        this.toast.success(isEdit ? `✔ Cliente "${c.name}" actualizado` : `✔ Cliente "${c.name}" registrado`);
       },
       error: (e: any) => {
-        const msg = e?.error?.message || 'Error guardando cliente';
+        // ✅ Mostrar detalles de validación del backend si existen
+        const details = e?.error?.details as Array<{field:string; message:string}> | undefined;
+        const msg = details?.length
+          ? details.map(d => d.message).join(' · ')
+          : (e?.error?.error || e?.error?.message || 'Error guardando cliente');
         this.error.set(msg);
         this.toast.error(msg);
       }
@@ -95,10 +130,7 @@ export class CustomersPageComponent implements OnInit {
   remove(id: string, name: string) {
     if (!confirm(`¿Eliminar al cliente "${name}"?`)) return;
     this.svc.remove(id).subscribe({
-      next: () => {
-        this.load();
-        this.toast.success(`Cliente "${name}" eliminado`);
-      },
+      next: () => { this.load(); this.toast.success(`Cliente "${name}" eliminado`); },
       error: (e: any) => {
         const msg = e?.error?.message || 'Error eliminando cliente';
         this.error.set(msg);
@@ -111,13 +143,8 @@ export class CustomersPageComponent implements OnInit {
     const p = Number(this.pointsToRedeem());
     if (!p || p <= 0) { this.toast.warning('Ingresa una cantidad de puntos válida'); return; }
     if ((c.points || 0) < p) { this.toast.error(`El cliente solo tiene ${c.points || 0} puntos`); return; }
-
     this.svc.redeem(c._id, p).subscribe({
-      next: () => {
-        this.pointsToRedeem.set(0);
-        this.load();
-        this.toast.success(`${p} puntos canjeados para ${c.name}`);
-      },
+      next: () => { this.pointsToRedeem.set(0); this.load(); this.toast.success(`${p} puntos canjeados para ${c.name}`); },
       error: (e: any) => this.toast.error(e?.error?.message || 'Error canjeando puntos')
     });
   }

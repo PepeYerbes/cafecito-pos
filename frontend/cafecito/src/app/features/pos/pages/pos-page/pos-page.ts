@@ -63,9 +63,21 @@ export class PosPageComponent implements OnInit, OnDestroy {
   // Ticket post-venta
   lastSaleId = signal<string | null>(null);
 
+  // ✅ Descuento por lealtad del cliente
+  loyaltyDiscount  = signal<number>(0);       // monto en $ calculado al abrir checkout
+  loyaltyTier      = signal<string>('');      // etiqueta: "Cliente VIP (8+ visitas)"
+  loyaltyPct       = signal<number>(0);       // porcentaje: 0 | 5 | 10 | 15
+
+  // ✅ Sidebar auto-hide
+  sidebarCollapsed = signal<boolean>(false);
+  private hideTimer: ReturnType<typeof setTimeout> | null = null;
+
   private sub = new Subscription();
 
   ngOnInit(): void {
+    // ✅ Vaciar carrito silenciosamente al iniciar nueva venta
+    this.posState.clearSilent();
+
     this.api.getCurrentCash().subscribe({
       next:  s  => { this.cash.set(s);    this.loadingCash.set(false); },
       error: () => { this.cash.set(null); this.loadingCash.set(false); }
@@ -80,16 +92,45 @@ export class PosPageComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.posState.cartEvents$.subscribe(ev => {
         switch (ev.type) {
-          case 'added':   this.toast.success(`✔ ${ev.name} agregado`); break;
-          case 'removed': this.toast.info(`🗑 ${ev.name} eliminado`);  break;
-          case 'cleared': this.toast.warning('Pedido vaciado');         break;
+          case 'added':       this.toast.success(`✔ ${ev.name} agregado`); break;
+          case 'removed':     this.toast.info(`🗑 ${ev.name} eliminado`);  break;
+          case 'cleared':     this.toast.warning('Pedido vaciado');         break;
+          // ✅ Límite de stock alcanzado
+          case 'stock_limit':
+            this.toast.warning(
+              `Solo hay ${ev.stock} unidad${ev.stock === 1 ? '' : 'es'} de "${ev.name}" disponibles`
+            );
+            break;
         }
       })
     );
+
+    // ✅ Auto-ocultar sidebar tras 3 segundos
+    this.startHideTimer();
   }
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    this.clearHideTimer();
+  }
+
+  // ── Sidebar auto-hide ──────────────────────────
+  startHideTimer() {
+    this.clearHideTimer();
+    this.hideTimer = setTimeout(() => this.sidebarCollapsed.set(true), 3000);
+  }
+
+  clearHideTimer() {
+    if (this.hideTimer) { clearTimeout(this.hideTimer); this.hideTimer = null; }
+  }
+
+  showSidebar() {
+    this.sidebarCollapsed.set(false);
+    this.clearHideTimer();
+  }
+
+  hideSidebarDelayed() {
+    this.startHideTimer();
   }
 
   goOpenShift()  { this.router.navigate(['/pos/open-shift']);  }
@@ -99,7 +140,25 @@ export class PosPageComponent implements OnInit, OnDestroy {
 
   setCustomer(c: Customer | null) {
     this.selectedCustomer.set(c);
-    if (c) this.toast.info(`Cliente: ${c.name}`);
+    // ✅ Limpiar descuento anterior
+    this.loyaltyDiscount.set(0);
+    this.loyaltyTier.set('');
+    this.loyaltyPct.set(0);
+
+    if (c) {
+      this.toast.info(`Cliente: ${c.name}`);
+      // Consultar descuento por lealtad
+      this.api.getCustomerDiscount(c._id).subscribe({
+        next: res => {
+          this.loyaltyPct.set(res.discountPct);
+          this.loyaltyTier.set(res.tier);
+          if (res.discountPct > 0) {
+            this.toast.success(`${res.tier} — ${res.discountPct}% de descuento aplicado`);
+          }
+        },
+        error: () => {} // silencioso
+      });
+    }
   }
 
   // ✅ Helper tipado para el template — evita "as any" en HTML
@@ -116,17 +175,28 @@ export class PosPageComponent implements OnInit, OnDestroy {
       this.toast.error('No hay caja abierta. Abre una sesión primero.');
       return;
     }
-    this.discount.set(0);
     this.saleNotes.set('');
     this.showCheckout.set(true);
+
+    // ✅ Pre-aplicar descuento de lealtad si hay cliente seleccionado
+    const pct = this.loyaltyPct();
+    if (pct > 0) {
+      const total  = this.posState.total();
+      const amount = Math.round(total * (pct / 100) * 100) / 100;
+      this.discount.set(amount);
+    } else {
+      this.discount.set(0);
+    }
   }
 
   cancelCheckout() { this.showCheckout.set(false); }
 
   confirmSale() {
+    // ✅ Incluye nota por ítem para la orden de cocina
     const items = this.posState.items().map(it => ({
       productId: it.producto._id,
-      quantity:  it.qty
+      quantity:  it.qty,
+      note:      it.note || ''
     }));
 
     const disc  = Number(this.discount()) || 0;
@@ -155,7 +225,13 @@ export class PosPageComponent implements OnInit, OnDestroy {
       },
       error: e => {
         this.checkoutLoading.set(false);
-        this.toast.error(e?.error?.message || 'Error al registrar la venta');
+        // ✅ Mensaje específico según el tipo de error
+        const serverMsg = e?.error?.message;
+        const isNetwork = e?.status === 0 || e?.message === 'Failed to fetch';
+        const msg = isNetwork
+          ? 'No se pudo finalizar el cobro — revisa las existencias e intenta de nuevo'
+          : (serverMsg || 'Error al registrar la venta');
+        this.toast.error(msg);
       }
     });
   }
@@ -180,6 +256,24 @@ export class PosPageComponent implements OnInit, OnDestroy {
         this.toast.success('Ticket descargado');
       },
       error: () => this.toast.error('No se pudo descargar el ticket')
+    });
+  }
+
+  /** ✅ Descarga el ticket de cocina con token JWT */
+  downloadKitchenTicket() {
+    const id = this.lastSaleId();
+    if (!id) return;
+    this.api.getKitchenTicketPdf(id).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = `cocina-${id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.toast.success('Ticket de cocina descargado');
+      },
+      error: () => this.toast.error('No se pudo descargar el ticket de cocina')
     });
   }
 

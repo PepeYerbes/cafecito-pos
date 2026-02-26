@@ -5,25 +5,32 @@
   </header>
 
   <div class="cart-list" *ngIf="pos.items().length; else empty">
-    <div
-      class="row"
-      *ngFor="let it of pos.items(); let i = index"
-      (click)="focusIndex(i)">
-      <div class="info">
-        <div class="name">{{ it.producto.nombre }}</div>
-        <div class="price">$ {{ it.producto.precio | number:'1.0-2' }}</div>
-        <div *ngIf="it.note" class="text-muted" style="font-size: 12px">Nota: {{ it.note }}</div>
-        <button class="btn btn-sm btn-outline-secondary mt-1" (click)="editNote(it.producto._id, it.note||'')" type="button">Nota</button>
+    <div class="row" *ngFor="let it of pos.items(); let i = index" (click)="focusIndex(i)">
+
+      <!-- Fila 1: nombre + precio unitario + total -->
+      <div class="row-top">
+        <div class="info">
+          <div class="name">{{ it.producto.nombre }}</div>
+          <div class="price">$ {{ it.producto.precio | number:'1.0-2' }} c/u</div>
         </div>
-      <div class="qty">
-        <button (click)="dec(it.producto._id)">−</button>
-        <input [value]="it.qty" (change)="directQty(it.producto._id, $any($event.target).value)">
-        <button (click)="inc(it.producto._id)">+</button>
+        <div class="row-total">$ {{ (it.producto.precio * it.qty) | number:'1.0-2' }}</div>
       </div>
-      <div class="total">
-        $ {{ (it.producto.precio * it.qty) | number:'1.0-2' }}
+
+      <!-- Fila 2: cantidad + nota + eliminar -->
+      <div class="row-bottom">
+        <div class="qty">
+          <button (click)="dec(it.producto._id)">−</button>
+          <input [value]="it.qty" (change)="directQty(it.producto._id, $any($event.target).value)">
+          <button (click)="inc(it.producto._id)">+</button>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary btn-note"
+                (click)="editNote(it.producto._id, it.note||'')" type="button">
+          Nota
+        </button>
+        <span class="note-text" *ngIf="it.note">{{ it.note }}</span>
+        <button class="remove" (click)="remove(it.producto._id)">✕</button>
       </div>
-      <button class="remove" (click)="remove(it.producto._id)">✕</button>
+
     </div>
   </div>
 
@@ -31,4 +38,3 @@
     <div class="empty">Carrito vacío</div>
   </ng-template>
 </section>
-``

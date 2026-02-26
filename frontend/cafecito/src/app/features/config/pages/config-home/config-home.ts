@@ -64,7 +64,7 @@ export class ConfigHomePageComponent implements OnInit {
   setUPass(v: string)               { this.uForm.set({ ...this.uForm(), password: v }); }
   setURole(v: 'ADMIN' | 'CASHIER') { this.uForm.set({ ...this.uForm(), role:     v }); }
 
-  categorias = ['Café', 'Té', 'Frappé', 'Postre', 'Snack', 'Otro'];
+  categorias = ['Café', 'Té', 'Frappé', 'Postre', 'Snack', 'Alimentos', 'Bebidas Frias'];
 
   ngOnInit(): void {
     this.loadProducts();
@@ -237,8 +237,8 @@ export class ConfigHomePageComponent implements OnInit {
 
   getCategoryIcon(cat: string): string {
     const map: Record<string, string> = {
-      'Café': '☕', 'Té': '🍵', 'Frappé': '🧋',
-      'Postre': '🍰', 'Snack': '🥐', 'Otro': '🛍️'
+      'Café': '☕', 'Té': '🍵', 'Frappé': '🍦',
+      'Postre': '🍰', 'Snack': '🥐', 'Alimentos': '🥞', 'Bebidas Frias': '🧊'
     };
     return map[cat] ?? '🛍️';
   }

@@ -8,7 +8,7 @@ export type ToastType = 'success' | 'error' | 'info' | 'warning';
 export class ToastService {
   private snackBar = inject(MatSnackBar);
 
-  private show(message: string, type: ToastType, duration = 3000): void {
+  private show(message: string, type: ToastType, duration = 5000): void {
     const config: MatSnackBarConfig = {
       duration,
       horizontalPosition: 'right',
@@ -18,19 +18,19 @@ export class ToastService {
     this.snackBar.open(message, '✕', config);
   }
 
-  success(message: string, duration = 3000): void {
+  success(message: string, duration = 5000): void {
     this.show(message, 'success', duration);
   }
 
-  error(message: string, duration = 4500): void {
+  error(message: string, duration = 5000): void {
     this.show(message, 'error', duration);
   }
 
-  info(message: string, duration = 3000): void {
+  info(message: string, duration = 5000): void {
     this.show(message, 'info', duration);
   }
 
-  warning(message: string, duration = 3500): void {
+  warning(message: string, duration = 5000): void {
     this.show(message, 'warning', duration);
   }
 }
