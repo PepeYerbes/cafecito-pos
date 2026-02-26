@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
   apiBaseUrl: 'http://localhost:3001/api',
-  mediaBaseUrl: 'http://localhost:3001'
+  mediaBaseUrl: 'http://localhost:3001/public'
 };
