@@ -60,6 +60,59 @@
       <div class="row"><div>MIXTO</div><div>$ <%= money((pays.find(p=>p.method==='MIXED')||{}).total) %> (<%= (pays.find(p=>p.method==='MIXED')||{}).count || 0 %>)</div></div>
     </div>
   </div>
+<!-- ========== Ventas por vendedor (resumen) ========== -->
+<div class="card" style="margin-top: 10px;">
+  <h3>Ventas por vendedor (resumen)</h3>
+  <% const sellers = session.sellerSummaries || []; %>
+  <% if (sellers.length === 0) { %>
+    <div class="muted">No hay ventas registradas por vendedor.</div>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr><th>Vendedor</th><th style="text-align:right">Piezas vendidas</th></tr>
+      </thead>
+      <tbody>
+        <% sellers.forEach(s => { %>
+          <tr>
+            <td><%= s.userName || s.userId %></td>
+            <td style="text-align:right"><%= s.totalItems || 0 %></td>
+          </tr>
+        <% }) %>
+        <tr class="highlight">
+          <td><b>Total de piezas</b></td>
+          <td style="text-align:right"><b><%= session.itemsCount || 0 %></b></td>
+        </tr>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<!-- ========== Detalle por vendedor (producto y cantidad) ========== -->
+<% if ((session.sellerSummaries || []).length) { %>
+  <div class="card" style="margin-top: 10px;">
+    <h3>Detalle por vendedor</h3>
+    <% (session.sellerSummaries || []).forEach(s => { %>
+      <div class="row" style="margin: 6px 0;">
+        <div><b><%= s.userName || s.userId %></b></div>
+        <div class="muted">Total piezas: <%= s.totalItems || 0 %></div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Producto</th><th style="text-align:right">Cantidad</th><th style="text-align:right">Ingreso</th></tr>
+        </thead>
+        <tbody>
+          <% (s.products || []).forEach(p => { %>
+            <tr>
+              <td><%= p.name %></td>
+              <td style="text-align:right"><%= p.qty || 0 %></td>
+              <td style="text-align:right">$ <%= money(p.revenue || 0) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% }) %>
+  </div>
+<% } %>
 
   <div class="grid" style="margin-top: 10px;">
     <div class="card">

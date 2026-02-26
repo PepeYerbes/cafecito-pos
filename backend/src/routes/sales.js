@@ -7,6 +7,7 @@ import Return from '../models/Return.js';
 import CashMovement from '../models/CashMovement.js';
 import Customer from '../models/Customer.js';
 import { decreaseStock, increaseStock } from '../services/inventory.js';
+import { buildSaleTicketPDF } from '../services/pdf/tickets.js';
 
 const router = Router();
 
@@ -32,17 +33,39 @@ function buildSaleItems(inputItems) {
   });
 }
 
+// ─────────────────────────────────────────────
+// GET /sales/:id/ticket  → PDF ticket de venta
+// ─────────────────────────────────────────────
+router.get('/:id/ticket', auth, async (req, res) => {
+  try {
+    const sale = await Sale.findById(req.params.id).lean();
+    if (!sale) return res.status(404).json({ message: 'Venta no encontrada' });
+
+    await buildSaleTicketPDF(res, {
+      sale,
+      store: {
+        name: process.env.STORE_NAME || 'Cafecito Feliz',
+        address: process.env.STORE_ADDRESS || 'Sucursal única'
+      }
+    });
+  } catch (err) {
+    console.error('Error generando ticket PDF:', err);
+    if (!res.headersSent) res.status(500).json({ message: 'Error generando ticket' });
+  }
+});
+
+// ─────────────────────────────────────────────
 // POST /sales   (crea venta simple)
+// ─────────────────────────────────────────────
 router.post('/', auth, requireopenCash, async (req, res) => {
   const { items, paidWith, discount = 0, notes = '', customerId } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: 'Items requeridos' });
   }
-  if (!['CASH','CARD','MIXED'].includes(paidWith)) {
+  if (!['CASH', 'CARD', 'MIXED'].includes(paidWith)) {
     return res.status(400).json({ message: 'paidWith inválido' });
   }
 
-  // Obtener datos de productos si no vienen name/price
   const productsMap = {};
   for (const it of items) {
     const p = await Product.findById(it.productId);
@@ -59,16 +82,14 @@ router.post('/', auth, requireopenCash, async (req, res) => {
   }));
 
   const saleItems = buildSaleItems(enriched);
-
-  const gross = saleItems.reduce((a,i)=>a+i.subtotal,0);
-  const taxes = saleItems.reduce((a,i)=>a+i.tax,0);
-  const itemsTotal = saleItems.reduce((a,i)=>a+i.total,0);
+  const gross = saleItems.reduce((a, i) => a + i.subtotal, 0);
+  const taxes = saleItems.reduce((a, i) => a + i.tax, 0);
+  const itemsTotal = saleItems.reduce((a, i) => a + i.total, 0);
 
   const disc = Number(discount) || 0;
   if (disc < 0) return res.status(400).json({ message: 'Descuento inválido' });
   if (disc > itemsTotal) return res.status(400).json({ message: 'Descuento no puede ser mayor al total' });
 
-  // Stock
   await decreaseStock(saleItems);
 
   const total = Math.max(0, itemsTotal - disc);
@@ -86,9 +107,9 @@ router.post('/', auth, requireopenCash, async (req, res) => {
     paidWith
   });
 
-  // Lealtad (si tiene cliente)
+  // Lealtad
   if (customerId) {
-    const rate = parseFloat(process.env.LOYALTY_POINTS_PER_MXN || '0.05'); // 1 punto c/20 MXN
+    const rate = parseFloat(process.env.LOYALTY_POINTS_PER_MXN || '0.05');
     const earned = Math.floor(total * rate);
     const c = await Customer.findById(customerId);
     if (c) {
@@ -103,31 +124,32 @@ router.post('/', auth, requireopenCash, async (req, res) => {
   res.json(sale);
 });
 
-// POST /sales/:id/cancel   (cancelación total)
+// ─────────────────────────────────────────────
+// POST /sales/:id/cancel
+// ─────────────────────────────────────────────
 router.post('/:id/cancel', auth, requireopenCash, async (req, res) => {
   const sale = await Sale.findById(req.params.id);
   if (!sale) return res.status(404).json({ message: 'Venta no encontrada' });
   if (sale.status !== 'COMPLETED') return res.status(400).json({ message: 'No se puede cancelar en estado actual' });
 
-  // Reponer stock
   const items = sale.items.map(i => ({ productId: i.productId, quantity: i.quantity }));
   await increaseStock(items);
 
   sale.status = 'CANCELLED';
   await sale.save();
 
-  // Revertir lealtad (opcional: aquí no descontamos puntos ya otorgados; si quieres, lo implemento)
   res.json({ message: 'Venta cancelada', sale });
 });
 
-// POST /sales/:id/return   (devolución parcial/total)
+// ─────────────────────────────────────────────
+// POST /sales/:id/return
+// ─────────────────────────────────────────────
 router.post('/:id/return', auth, requireopenCash, async (req, res) => {
-  const { items, reason } = req.body; // items: [{productId, quantity}]
+  const { items, reason } = req.body;
   const sale = await Sale.findById(req.params.id);
   if (!sale) return res.status(404).json({ message: 'Venta no encontrada' });
   if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ message: 'Items requeridos' });
 
-  // Validar cantidades
   const saleQtyMap = {};
   sale.items.forEach(i => saleQtyMap[String(i.productId)] = (saleQtyMap[String(i.productId)] || 0) + i.quantity);
 
@@ -138,12 +160,10 @@ router.post('/:id/return', auth, requireopenCash, async (req, res) => {
     }
   }
 
-  // Factor para aplicar descuento proporcionalmente al monto original de items
   const sumLineTotals = sale.items.reduce((a, i) => a + (i.total || 0), 0);
   const paidTotal = Number(sale.total || 0);
   const factor = sumLineTotals > 0 ? (paidTotal / sumLineTotals) : 1;
 
-  // Calcular monto de reembolso proporcional
   let refundAmount = 0;
   for (const it of items) {
     const line = sale.items.find(si => String(si.productId) === String(it.productId));
@@ -151,10 +171,8 @@ router.post('/:id/return', auth, requireopenCash, async (req, res) => {
     refundAmount += unitTotal * it.quantity;
   }
 
-  // Reponer stock
   await increaseStock(items);
 
-  // Registrar Return
   const ret = await Return.create({
     saleId: sale._id,
     sessionId: req.session._id,
@@ -167,7 +185,6 @@ router.post('/:id/return', auth, requireopenCash, async (req, res) => {
     refundAmount
   });
 
-  // Si pago fue CASH, movimiento OUT
   if (sale.paidWith === 'CASH') {
     await CashMovement.create({
       sessionId: req.session._id,
@@ -178,14 +195,12 @@ router.post('/:id/return', auth, requireopenCash, async (req, res) => {
     });
   }
 
-  // Estado venta
   const totalRefunds = (await Return.find({ saleId: sale._id }))
-    .reduce((a,r)=>a+(r.refundAmount||0),0);
+    .reduce((a, r) => a + (r.refundAmount || 0), 0);
 
   sale.status = (totalRefunds >= sale.total - 0.005) ? 'REFUNDED_FULL' : 'REFUNDED_PARTIAL';
   await sale.save();
 
-  // Lealtad: opcionalmente descontar puntos proporcionales (si lo deseas, lo añadimos)
   res.json({ message: 'Devolución registrada', return: ret, sale });
 });
 

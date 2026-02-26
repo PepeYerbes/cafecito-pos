@@ -9,22 +9,22 @@ export async function auth(req, res, next) {
   try {
     const h = req.headers['authorization'] || '';
     const token = h.startsWith('Bearer ') ? h.slice(7) : null;
-    if (!token) return res.status(401).json({ message: 'Token requerido' });
+    if (!token) return res.status(401).json({ error: 'Authentication required', message: 'Missing authorization token' });
 
     const payload = jwt.verify(token, SECRET);
     const user = await User.findById(payload.sub).lean();
-    if (!user) return res.status(401).json({ message: 'Usuario no encontrado' });
+    if (!user) return res.status(401).json({ error: 'Invalid token', message: 'Token is malformed or expired' });
 
     req.user = { id: String(user._id), role: user.role, name: user.name, email: user.email };
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Token inválido o expirado' });
+    return res.status(401).json({ error: 'Invalid token', message: 'Token is malformed or expired' });
   }
 }
 
 export function adminOnly(req, res, next) {
   if (req.user?.role !== 'ADMIN') {
-    return res.status(403).json({ message: 'Requiere rol ADMIN' });
+    return res.status(403).json({ error: 'Insufficient permissions', message: 'Only admins can create products' });
   }
   next();
 }

@@ -25,10 +25,27 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-/** ---------- GET (listado con filtros) ---------- */
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 12, q, categoria, minPrecio, maxPrecio, activo } = req.query;
+    const { page, limit, q, categoria, minPrecio, maxPrecio, activo } = req.query;
+
+    // Validación de query params (solo si vienen)
+    const qErrors = [];
+    if (page !== undefined) {
+      const p = parseInt(String(page), 10);
+      if (!Number.isInteger(p) || p < 1) qErrors.push({
+        field: 'page', value: page,
+        message: 'page must be a positive integer (greater than or equal to 1)'
+      });
+    }
+    if (limit !== undefined) {
+      const l = parseInt(String(limit), 10);
+      if (!Number.isInteger(l) || l < 1 || l > 100) qErrors.push({
+        field: 'limit', value: limit,
+        message: 'limit must be a positive integer between 1 and 100'
+      });
+    }
+    if (qErrors.length) return res.status(400).json({ error: 'Invalid query parameters', details: qErrors });
 
     const filtros = {};
     if (q) filtros.name = { $regex: String(q), $options: 'i' };
@@ -36,12 +53,12 @@ router.get('/', async (req, res) => {
     if (activo !== undefined) filtros.active = String(activo) === 'true';
     if (minPrecio !== undefined || maxPrecio !== undefined) {
       filtros.price = {};
-      if (minPrecio !== undefined) filtros.price.$gte = toFloat(minPrecio, 0);
-      if (maxPrecio !== undefined) filtros.price.$lte = toFloat(maxPrecio, Number.MAX_SAFE_INTEGER);
+      if (minPrecio !== undefined) filtros.price.$gte = parseFloat(String(minPrecio)) || 0;
+      if (maxPrecio !== undefined) filtros.price.$lte = parseFloat(String(maxPrecio)) || Number.MAX_SAFE_INTEGER;
     }
 
-    const pageNum  = Math.max(1, toInt(page, 1));
-    const limitNum = Math.min(100, Math.max(1, toInt(limit, 12)));
+    const pageNum  = Math.max(1, page ? parseInt(String(page), 10) : 1);
+    const limitNum = Math.min(100, Math.max(1, limit ? parseInt(String(limit), 10) : 12));
     const skip     = (pageNum - 1) * limitNum;
 
     const [items, total] = await Promise.all([
@@ -63,17 +80,26 @@ router.get('/', async (req, res) => {
       imageUrl:  p.imageUrl || ''
     }));
 
-    res.json({ data: mapped, page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) });
+    const payload = {
+      data: mapped,
+      page: pageNum, limit: limitNum, total,
+      totalPages: Math.ceil(total / limitNum)
+    };
+    // Mensaje informativo si búsqueda no arrojó resultados
+    if (q && String(q).trim() && total === 0) {
+      return res.status(200).json({ ...payload, message: `No products found matching '${q}'` });
+    }
+    res.json(payload);
   } catch (err) {
     console.error('Error listando productos', err);
-    res.status(500).json({ message: 'Error listando productos', error: err.message });
+    res.status(500).json({ error: 'Internal Server Error', message: err.message });
   }
 });
 
-/** ---------- GET by id ---------- */
+// GET by id => 404 consistente
 router.get('/:id', async (req, res) => {
   const p = await Product.findById(req.params.id).lean();
-  if (!p) return res.status(404).json({ message: 'Producto no encontrado' });
+  if (!p) return res.status(404).json({ error: 'Product not found', id: req.params.id });
   res.json({
     _id: String(p._id),
     nombre: p.nombre ?? p.name,
@@ -89,64 +115,93 @@ router.get('/:id', async (req, res) => {
   });
 });
 
-/** ---------- POST (crear) [admin] ----------
- * Admite:
- *  - multipart/form-data con campo `image` (archivo) + campos JSON
- *  - JSON puro (con imageUrl)
- */
+
+// POST (crear) [admin] — valida requeridos y reglas
 router.post('/', auth, adminOnly, upload.single('image'), async (req, res) => {
   try {
     const body = req.body || {};
     const imageUrl = req.file ? `/public/uploads/products/${req.file.filename}` : (body.imageUrl || '');
-    const dto = {
-      name: body.nombre || body.name,
-      sku: body.codigo || body.sku,
-      price: Number(body.precio ?? body.price),
-      taxRate: Number(body.taxRate ?? 0.16),
-      stock: Number(body.stock ?? 0),
-      active: String(body.activo ?? body.active ?? 'true') === 'true',
-      categoria: body.categoria || 'Otro',
-      imageUrl
-    };
-    if (!dto.name || !dto.sku || !Number.isFinite(dto.price)) {
-      return res.status(400).json({ message: 'Campos inválidos (nombre, codigo, precio)' });
-    }
-    const exists = await Product.findOne({ sku: dto.sku });
-    if (exists) return res.status(400).json({ message: 'SKU ya existente' });
+
+    const errors = [];
+    const name = body.nombre || body.name;
+    const sku  = body.codigo || body.sku;
+    const price = Number(body.precio ?? body.price);
+    const stock = Number(body.stock ?? 0);
+    const taxRate = Number(body.taxRate ?? 0.16);
+    const categoria = body.categoria || 'Otro';
+    const active = String(body.activo ?? body.active ?? 'true') === 'true';
+
+    if (!name) errors.push({ field: 'name', message: 'name is required' });
+    if (!sku)  errors.push({ field: 'sku',  message: 'sku is required' });
+    if (!Number.isFinite(price)) errors.push({ field: 'price', message: 'price must be a number' });
+    if (Number.isFinite(price) && price <= 0) errors.push({ field: 'price', message: 'price must be a number greater than 0' });
+    if (!Number.isFinite(stock) || stock < 0) errors.push({ field: 'stock', message: 'stock must be a number ≥ 0' });
+    if (!Number.isFinite(taxRate) || taxRate < 0 || taxRate > 1) errors.push({ field: 'taxRate', message: 'taxRate must be between 0 and 1' });
+    if (errors.length) return res.status(422).json({ error: 'Validation failed', details: errors });
+
+    const exists = await Product.findOne({ sku });
+    if (exists) return res.status(400).json({ error: 'Business rule violation', details: [{ field: 'sku', message: 'SKU already exists' }] });
+
+    const dto = { name, sku, price, stock, taxRate, categoria, active, imageUrl };
     const p = await Product.create(dto);
     res.status(201).json(p);
   } catch (err) {
-    res.status(400).json({ message: 'Error creando producto', error: err.message });
+    res.status(500).json({ error: 'Internal Server Error', message: err.message });
   }
 });
 
-/** ---------- PUT (actualizar) [admin] ---------- */
+
+// PUT (actualizar) [admin] — valida y evita SKU duplicado
 router.put('/:id', auth, adminOnly, upload.single('image'), async (req, res) => {
   try {
+    const id = String(req.params.id || '');
     const body = req.body || {};
     const update = {};
+    const valErrors = [];
+
+    if (!id) return res.status(404).json({ error: 'Product not found', id });
+
     if (req.file) update.imageUrl = `/public/uploads/products/${req.file.filename}`;
     if (body.nombre || body.name) update.name = body.nombre || body.name;
     if (body.codigo || body.sku) update.sku = body.codigo || body.sku;
-    if (body.precio ?? body.price) update.price = Number(body.precio ?? body.price);
-    if (body.taxRate !== undefined) update.taxRate = Number(body.taxRate);
-    if (body.stock !== undefined) update.stock = Number(body.stock);
+    if (body.precio !== undefined || body.price !== undefined) {
+      const v = Number(body.precio ?? body.price);
+      if (!Number.isFinite(v) || v <= 0) valErrors.push({ field: 'price', message: 'price must be a number greater than 0' });
+      else update.price = v;
+    }
+    if (body.taxRate !== undefined) {
+      const v = Number(body.taxRate);
+      if (!Number.isFinite(v) || v < 0 || v > 1) valErrors.push({ field: 'taxRate', message: 'taxRate must be between 0 and 1' });
+      else update.taxRate = v;
+    }
+    if (body.stock !== undefined) {
+      const v = Number(body.stock);
+      if (!Number.isFinite(v) || v < 0) valErrors.push({ field: 'stock', message: 'stock must be a number ≥ 0' });
+      else update.stock = v;
+    }
     if (body.activo !== undefined || body.active !== undefined)
       update.active = String(body.activo ?? body.active) === 'true';
     if (body.categoria) update.categoria = body.categoria;
 
-    const p = await Product.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
-    if (!p) return res.status(404).json({ message: 'Producto no encontrado' });
+    if (valErrors.length) return res.status(422).json({ error: 'Validation failed', details: valErrors });
+
+    if (update.sku) {
+      const dup = await Product.findOne({ sku: update.sku, _id: { $ne: id } });
+      if (dup) return res.status(400).json({ error: 'Business rule violation', details: [{ field: 'sku', message: 'SKU already exists' }] });
+    }
+
+    const p = await Product.findByIdAndUpdate(id, { $set: update }, { new: true });
+    if (!p) return res.status(404).json({ error: 'Product not found', id });
     res.json(p);
   } catch (err) {
-    res.status(400).json({ message: 'Error actualizando producto', error: err.message });
+    res.status(500).json({ error: 'Internal Server Error', message: err.message });
   }
 });
 
 /** ---------- DELETE (baja) [admin] ---------- */
 router.delete('/:id', auth, adminOnly, async (req, res) => {
   const p = await Product.findByIdAndDelete(req.params.id);
-  if (!p) return res.status(404).json({ message: 'Producto no encontrado' });
+  if (!p) return res.status(404).json({ error: 'Product not found', id: req.params.id });
   res.json({ ok: true, id: req.params.id });
 });
 

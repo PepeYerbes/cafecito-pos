@@ -19,10 +19,10 @@
   </header>
 
   <div *ngIf="cargando" class="loading">Cargando productos...</div>
-  <div *ngIf="!cargando && productos.length === 0" class="empty">No se encontraron productos.</div>
+  <div *ngIf="!cargando && products.length === 0" class="empty">No se encontraron productos.</div>
 
   <div class="grid">
-    <app-product-card *ngFor="let p of productos" [producto]="p"></app-product-card>
+    <app-product-card *ngFor="let p of products" [producto]="p"></app-product-card>
   </div>
 
   <footer class="pagination" *ngIf="totalPages > 1">

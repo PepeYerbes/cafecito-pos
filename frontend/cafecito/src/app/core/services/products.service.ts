@@ -8,7 +8,7 @@ import { Producto, ProductosResponse } from '../models/product.model';
 @Injectable({ providedIn: 'root' })
 export class ProductosService {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiBaseUrl}/productos`;
+  private readonly base = `${environment.apiBaseUrl}/products`;
 
   listar(opts?: {
     page?: number; limit?: number; q?: string; categoria?: string;

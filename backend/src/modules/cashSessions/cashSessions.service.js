@@ -1,4 +1,6 @@
 import path from 'path';
+import User from '../../models/User.js';
+import mongoose from 'mongoose';
 import fs from 'fs/promises';
 import dayjs from 'dayjs';
 import CashSession from '../../models/CashSession.js';
@@ -103,20 +105,16 @@ export async function closeSession({ sessionId, countedCash, notes, closedBy }) 
   const salesTotals = salesAgg[0] || { gross: 0, taxes: 0, discount: 0, total: 0, count: 0 };
 
   // Pagos por método
-  const payAgg = await Sale.aggregate([
-    { $match: { sessionId: session._id, status: { $in: allowed } } },
-    {
-      $group: {
-        _id: '$paidWith',
-        total: { $sum: '$total' },
-        count: { $sum: 1 }
-      }
-    }
-  ]);
-  const payments = ['CASH', 'CARD', 'MIXED'].map(method => {
-    const row = payAgg.find(r => r._id === method);
-    return { method, total: row?.total || 0, count: row?.count || 0 };
-  });
+ 
+const payAgg = await Sale.aggregate([
+  { $match: { sessionId: session._id, status: { $in: allowed } } },
+  { $group: { _id: '$paidWith', total: { $sum: '$total' }, count: { $sum: 1 } } }
+]);
+const METHODS = ['CASH', 'CARD', 'MIXED', 'TRANSFER'];
+const payments = METHODS.map(method => {
+  const row = payAgg.find(r => r._id === method);
+  return { method, total: row?.total || 0, count: row?.count || 0 };
+});
 
   // Movimientos de caja
   const movementsDocs = await CashMovement.find({ sessionId: session._id }).sort({ createdAt: 1 }).lean();
@@ -136,13 +134,63 @@ export async function closeSession({ sessionId, countedCash, notes, closedBy }) 
   ]);
   const returnsSummary = returnsAgg[0] || { count: 0, refundAmount: 0 };
 
-  // Expected cash
+
+ /** 🔹 Agregación: total de piezas vendidas en la sesión */
+  const totalItemsAgg = await Sale.aggregate([
+    { $match: { sessionId: session._id, status: { $in: allowed } } },
+    { $unwind: '$items' },
+    { $group: { _id: null, itemsCount: { $sum: '$items.quantity' } } }
+  ]);
+  const itemsCount = totalItemsAgg[0]?.itemsCount || 0;
+
+  /** 🔹 Agregación: por vendedor y producto */
+  const bySellerProduct = await Sale.aggregate([
+    { $match: { sessionId: session._id, status: { $in: allowed } } },
+    { $unwind: '$items' },
+    {
+      $group: {
+        _id: { userId: '$userId', productId: '$items.productId', name: '$items.name' },
+        qty: { $sum: '$items.quantity' },
+        revenue: { $sum: '$items.total' }
+      }
+    }
+  ]);
+
+  // Mapear a estructura por vendedor
+  const sellersMap = new Map();
+  for (const row of bySellerProduct) {
+    const userIdStr = String(row._id.userId || '');
+    if (!sellersMap.has(userIdStr)) sellersMap.set(userIdStr, { products: [], totalItems: 0 });
+    const s = sellersMap.get(userIdStr);
+    s.products.push({
+      productId: row._id.productId,
+      name: row._id.name,
+      qty: row.qty,
+      revenue: Math.round((row.revenue || 0) * 100) / 100
+    });
+    s.totalItems += row.qty;
+  }
+
+  // Obtener nombres de usuarios
+  const userIds = Array.from(sellersMap.keys()).filter(Boolean);
+  const users = await User.find({ _id: { $in: userIds } }).lean();
+  const userNameById = new Map(users.map(u => [String(u._id), u.name || u.email || 'Usuario']));
+
+  const sellerSummaries = userIds.map(uid => ({
+    userId: new mongoose.Types.ObjectId(uid),
+    userName: userNameById.get(uid) || uid,
+    totalItems: sellersMap.get(uid)?.totalItems || 0,
+    products: (sellersMap.get(uid)?.products || []).sort((a, b) => b.qty - a.qty)
+  })).sort((a, b) => b.totalItems - a.totalItems);
+
+  // Persistir en la sesión para que el PDF los tenga disponibles
+  session.itemsCount = itemsCount;
+  session.sellerSummaries = sellerSummaries;
+  
+
+// Expected cash (solo CASH + MIXED si policy=COUNT_AS_CASH)
   const cashSales = payments.find(p => p.method === 'CASH')?.total || 0;
   const mixedSales = payments.find(p => p.method === 'MIXED')?.total || 0;
-
-  // 🔸 Aplica política MIXED:
-  // - COUNT_AS_CASH: suma MIXED al efectivo esperado
-  // - COUNT_AS_CARD / IGNORE: no lo suma
   const effectiveCash = cashSales + (MIXED_CASH_POLICY === 'COUNT_AS_CASH' ? mixedSales : 0);
 
   const expectedCash = (session.initialCash || 0) + effectiveCash + sumIn - sumOut;

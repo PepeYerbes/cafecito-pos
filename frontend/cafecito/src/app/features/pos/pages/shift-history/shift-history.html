@@ -1,3 +1,4 @@
+<!-- src/app/features/pos/pages/shift-history/shift-history.html -->
 <section class="container" *ngIf="!loading(); else loadingTpl">
   <header class="header">
     <h2>Historial de cierres</h2>
@@ -17,31 +18,42 @@
   <div class="table-wrap" *ngIf="items().length; else emptyTpl">
     <table class="table">
       <thead>
-      <tr>
-        <th>Fecha cierre</th>
-        <th>Total</th>
-        <th>Efectivo</th>
-        <th>Tarjeta</th>
-        <th>Mixto</th>
-        <th></th>
-      </tr>
+        <tr>
+          <th>Fecha cierre</th>
+          <th>Cajero</th>
+          <th>Total</th>
+          <th>Efectivo</th>
+          <th>Tarjeta</th>
+          <th>Mixto</th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr *ngFor="let s of items()">
-        <td>{{ s.closedAt | date:'short' }}</td>
-        <td>{{ s.totals?.total || 0 | currency:'MXN' }}</td>
+        <tr *ngFor="let s of items()">
+          <td>{{ s.closedAt | date:'short' }}</td>
 
-        <!-- ✅ Usar helpers; nada de arrow functions en template -->
-        <td>{{ paymentTotal(s, 'CASH')  | currency:'MXN' }}</td>
-        <td>{{ paymentTotal(s, 'CARD')  | currency:'MXN' }}</td>
-        <td>{{ paymentTotal(s, 'MIXED') | currency:'MXN' }}</td>
+          <!-- ✅ Nombre del cajero -->
+          <td class="cashier-cell">
+            <span class="cashier-badge">👤 {{ cashierName(s) }}</span>
+          </td>
 
-        <td>
-          <a [routerLink]="['/pos/shift-detail', s._id]" class="link">Detalle</a>
-          &nbsp;|&nbsp;
-          <a [href]="'/api/cash/register/'+s._id+'/report?format=pdf'" target="_blank" class="link">PDF</a>
-        </td>
-      </tr>
+          <td>{{ s.totals?.total || 0 | currency:'MXN' }}</td>
+          <td>{{ paymentTotal(s, 'CASH')  | currency:'MXN' }}</td>
+          <td>{{ paymentTotal(s, 'CARD')  | currency:'MXN' }}</td>
+          <td>{{ paymentTotal(s, 'MIXED') | currency:'MXN' }}</td>
+
+          <td class="actions-cell">
+            <a [routerLink]="['/pos/shift-detail', s._id]" class="link">Detalle</a>
+            &nbsp;|&nbsp;
+            <!-- ✅ FIX: botón con descarga via HTTP (lleva el token JWT) -->
+            <button
+              class="link-btn"
+              [disabled]="downloadingId() === s._id"
+              (click)="downloadPdf(s._id)">
+              {{ downloadingId() === s._id ? '⏳ Descargando…' : 'PDF' }}
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 

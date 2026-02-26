@@ -23,5 +23,10 @@ export class CartComponent {
     const n = parseInt(val, 10);
     if (!Number.isNaN(n)) this.pos.setQty(id, n);
   }
+  
+editNote(id: string, current: string) {
+    const note = prompt('Nota para cocina / preparación:', current || '');
+    if (note !== null) this.pos.setNote(id, note.trim());
+  }
 }
 

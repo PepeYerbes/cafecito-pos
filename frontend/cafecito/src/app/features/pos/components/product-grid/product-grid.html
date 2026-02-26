@@ -1,13 +1,43 @@
+<!-- src/app/features/pos/components/product-grid/product-grid.html -->
 <div class="grid">
   <button
     class="item"
     *ngFor="let p of productos"
-    (click)="add.emit(p)">
-    <img *ngIf="p.imageUrl" [src]="p.imageUrl" alt="" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:4px;">
-    <div class="title">{{ p.nombre }}</div>
-    <div class="meta">
-      <span class="price">$ {{ p.precio | number:'1.0-2' }}</span>
-      <span class="stock" [class.low]="p.stock <= 5">Stock: {{ p.stock }}</span>
+    (click)="add.emit(p)"
+    [title]="p.nombre + ' — $' + p.precio">
+
+    <!-- Imagen real si existe, placeholder con ícono de categoría si no -->
+    <div class="product-img-wrap">
+      <ng-container *ngIf="p.imageUrl; else iconPlaceholder">
+        <img
+          [src]="p.imageUrl"
+          [alt]="p.nombre"
+          class="product-img"
+          (error)="$any($event.target).style.display='none'; $any($event.target).nextElementSibling.style.display='flex'"
+        />
+        <div class="product-img-placeholder" style="display:none">
+          {{ getCategoryIcon(p.categoria) }}
+        </div>
+      </ng-container>
+
+      <ng-template #iconPlaceholder>
+        <div class="product-img-placeholder">{{ getCategoryIcon(p.categoria) }}</div>
+      </ng-template>
+
+      <!-- Badge de stock bajo -->
+      <span class="stock-badge" *ngIf="p.stock <= 5 && p.stock > 0">
+        {{ p.stock }} left
+      </span>
+      <span class="stock-badge out" *ngIf="p.stock === 0">Agotado</span>
     </div>
+
+    <div class="product-info">
+      <div class="product-name">{{ p.nombre }}</div>
+      <div class="product-footer">
+        <span class="price">$ {{ p.precio | number:'1.0-2' }}</span>
+        <span class="category-tag">{{ p.categoria }}</span>
+      </div>
+    </div>
+
   </button>
 </div>

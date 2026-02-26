@@ -1,66 +1,250 @@
+<!-- src/app/features/pos/pages/pos-page/pos-page.html -->
 <section class="layout">
-  <!-- Sidebar -->
+
+  <!-- ═══════ SIDEBAR ═══════ -->
   <aside class="sidebar">
     <div class="brand">
       <span class="logo">☕</span>
       <div class="title">
-        <div class="name">POS</div>
-        <small class="muted">Caja y Ventas</small>
+        <div class="name">Cafecito Feliz</div>
+        <small class="muted">Punto de Venta</small>
       </div>
     </div>
 
     <nav class="nav">
       <a routerLink="/pos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        🧾 Punto de venta
+        <span class="nav-icon">🧾</span> Punto de venta
       </a>
-      <a routerLink="/pos/open-shift" routerLinkActive="active">🔓 Abrir caja</a>
-      <a routerLink="/pos/close-shift" routerLinkActive="active">🔒 Cerrar caja</a>
-      <a routerLink="/catalogo" routerLinkActive="active">🗂️ Catálogo</a>
-      <a routerLink="/config" routerLinkActive="active">⚙️ Configuración</a>
-      <a routerLink="/pos/shift-history" routerLinkActive="active">📜 Historial cierres</a>
-      <a routerLink="/customers" routerLinkActive="active">👥 Clientes</a>
+      <a routerLink="/pos/open-shift" routerLinkActive="active">
+        <span class="nav-icon">🔓</span> Abrir caja
+      </a>
+      <a routerLink="/pos/close-shift" routerLinkActive="active">
+        <span class="nav-icon">🔒</span> Cerrar caja
+      </a>
+      <a routerLink="/catalogo" routerLinkActive="active">
+        <span class="nav-icon">🗂️</span> Catálogo
+      </a>
+      <a routerLink="/config" routerLinkActive="active">
+        <span class="nav-icon">⚙️</span> Configuración
+      </a>
+      <a routerLink="/pos/shift-history" routerLinkActive="active">
+        <span class="nav-icon">📜</span> Historial
+      </a>
+      <a routerLink="/customers" routerLinkActive="active">
+        <span class="nav-icon">👥</span> Clientes
+      </a>
     </nav>
 
+    <!-- Estado de sesión -->
     <div class="session">
-      <ng-container *ngIf="!loadingCash(); else loadingTpl">
-        <div *ngIf="hasOpenSession(); else closedTpl" class="badge open">Caja abierta</div>
-        <ng-template #closedTpl><div class="badge closed">Caja cerrada</div></ng-template>
+      <ng-container *ngIf="!loadingCash(); else loadingCashTpl">
+        <div *ngIf="hasOpenSession(); else closedTpl" class="badge badge-open">
+          <span>●</span> Caja abierta
+        </div>
+        <ng-template #closedTpl>
+          <div class="badge badge-closed"><span>●</span> Caja cerrada</div>
+        </ng-template>
       </ng-container>
+      <ng-template #loadingCashTpl>
+        <div class="badge badge-loading">Verificando…</div>
+      </ng-template>
 
-      <div class="actions">
-        <button class="btn" (click)="goOpenShift()">Abrir</button>
-        <button class="btn outline" (click)="goCloseShift()">Cerrar</button>
+      <div class="session-actions">
+        <button class="btn-session" (click)="goOpenShift()">Abrir</button>
+        <button class="btn-session outline" (click)="goCloseShift()">Cerrar</button>
       </div>
     </div>
   </aside>
 
-  <!-- Contenido principal -->
+  <!-- ═══════ CONTENIDO PRINCIPAL ═══════ -->
   <main class="content">
     <header class="topbar">
       <h1>Punto de venta</h1>
-      <span class="muted" *ngIf="cash(); else noCash">Sesión activa</span>
-      <ng-template #noCash><span class="muted">Sin sesión</span></ng-template>
+      <div class="topbar-right">
+        <span class="session-badge" *ngIf="cash(); else noCash">
+          <span class="dot open"></span> Sesión activa
+        </span>
+        <ng-template #noCash>
+          <span class="session-badge">
+            <span class="dot closed"></span> Sin sesión
+          </span>
+        </ng-template>
+      </div>
     </header>
 
     <div class="workspace">
-      <!-- Productos -->
-      <section class="pane">
-        <ng-container *ngIf="!loadingProducts(); else loadingTpl2">
-          <app-product-grid [productos]="productos()" (add)="addProduct($event)"></app-product-grid>
+
+      <!-- Columna izquierda: Grilla de productos -->
+      <section class="pane pane-products">
+        <div class="pane-header">
+          <h2 class="pane-title">Productos</h2>
+          <span class="product-count muted" *ngIf="!loadingProducts()">
+            {{ productos().length }} disponibles
+          </span>
+        </div>
+
+        <ng-container *ngIf="!loadingProducts(); else loadingProductsTpl">
+          <div *ngIf="productos().length; else noProducts">
+            <app-product-grid
+              [productos]="productos()"
+              (add)="addProduct($event)">
+            </app-product-grid>
+          </div>
+          <ng-template #noProducts>
+            <div class="empty-state">
+              <span class="empty-icon">🗂️</span>
+              <p>No hay productos disponibles</p>
+              <a routerLink="/config" class="link">Ir a configuración</a>
+            </div>
+          </ng-template>
         </ng-container>
-        <ng-template #loadingTpl2><div class="muted">Cargando productos…</div></ng-template>
+
+        <ng-template #loadingProductsTpl>
+          <div class="loading-overlay">
+            <span>Cargando productos…</span>
+          </div>
+        </ng-template>
       </section>
 
-      <!-- Carrito / Totales / Cliente -->
-      <section class="pane narrow">
+      <!-- Columna derecha: Cliente + Carrito + Totales -->
+      <section class="pane pane-narrow">
         <app-customer-picker (select)="setCustomer($event)"></app-customer-picker>
         <app-cart></app-cart>
         <app-totals (checkout)="onCheckout()"></app-totals>
       </section>
+
     </div>
   </main>
+
 </section>
 
-<ng-template #loadingTpl>
-  <div class="muted">Verificando estado de caja…</div>
-</ng-template>
+<!-- ═══════════════════════════════════════════════
+     MODAL: CHECKOUT / COBRO
+     ═══════════════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="showCheckout()" (click)="cancelCheckout()">
+  <div class="modal-card checkout-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>Confirmar cobro</h3>
+      <button class="modal-close" (click)="cancelCheckout()">✕</button>
+    </div>
+
+    <!-- Resumen del pedido -->
+    <div class="checkout-summary">
+      <div class="summary-row">
+        <span>Artículos</span>
+        <strong>{{ posState.totalItems() }}</strong>
+      </div>
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span>$ {{ posState.subtotal() | number:'1.2-2' }}</span>
+      </div>
+      <div class="summary-row">
+        <span>IVA (16%)</span>
+        <span>$ {{ posState.taxes() | number:'1.2-2' }}</span>
+      </div>
+      <div class="summary-row discount-row" *ngIf="discount() > 0">
+        <span>Descuento</span>
+        <span class="text-danger">– $ {{ discount() | number:'1.2-2' }}</span>
+      </div>
+      <div class="summary-row total-row">
+        <strong>TOTAL</strong>
+        <strong class="total-amount">
+          $ {{ (posState.total() - (discount() || 0)) | number:'1.2-2' }}
+        </strong>
+      </div>
+    </div>
+
+    <!-- Forma de pago -->
+    <div class="checkout-field">
+      <label class="field-label">Forma de pago</label>
+      <div class="payment-methods">
+
+        <!-- ✅ FIX: un botón por método en lugar de *ngFor con cast -->
+        <button
+          class="payment-btn"
+          [class.selected]="paidWith() === 'CASH'"
+          (click)="setPaidWith('CASH')">
+          <span class="pay-icon">💵</span>
+          <span>Efectivo</span>
+        </button>
+
+        <button
+          class="payment-btn"
+          [class.selected]="paidWith() === 'CARD'"
+          (click)="setPaidWith('CARD')">
+          <span class="pay-icon">💳</span>
+          <span>Tarjeta</span>
+        </button>
+
+        <button
+          class="payment-btn"
+          [class.selected]="paidWith() === 'MIXED'"
+          (click)="setPaidWith('MIXED')">
+          <span class="pay-icon">🔀</span>
+          <span>Mixto</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Descuento -->
+    <div class="checkout-field">
+      <label class="field-label" for="discount">Descuento ($)</label>
+      <input
+        id="discount"
+        type="number"
+        min="0"
+        step="0.01"
+        [ngModel]="discount()"
+        (ngModelChange)="discount.set(+$event)"
+        placeholder="0.00"
+        class="checkout-input"
+      />
+    </div>
+
+    <!-- Cliente seleccionado -->
+    <div class="checkout-field" *ngIf="selectedCustomer() as c">
+      <label class="field-label">Cliente</label>
+      <div class="customer-tag">
+        <span>👤 {{ c.name }}</span>
+        <span class="customer-points">{{ c.points || 0 }} pts</span>
+      </div>
+    </div>
+
+    <!-- Notas -->
+    <div class="checkout-field">
+      <label class="field-label" for="sale-notes">Notas (opcional)</label>
+      <textarea
+        id="sale-notes"
+        rows="2"
+        [ngModel]="saleNotes()"
+        (ngModelChange)="saleNotes.set($event)"
+        placeholder="Observaciones de la venta…"
+        class="checkout-input"
+      ></textarea>
+    </div>
+
+    <!-- Acciones -->
+    <div class="modal-actions">
+      <button class="btn outline" (click)="cancelCheckout()">Cancelar</button>
+      <button
+        class="btn success"
+        [disabled]="checkoutLoading()"
+        (click)="confirmSale()">
+        {{ checkoutLoading() ? 'Procesando…' : '✔ Cobrar' }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     BANNER: ÚLTIMA VENTA (ticket PDF)
+     ═══════════════════════════════════════════════ -->
+<div class="ticket-banner" *ngIf="lastSaleId()">
+  <span>✅ Venta registrada —</span>
+  <button class="ticket-link" (click)="openTicket()">Ver ticket</button>
+  <button class="ticket-link" (click)="downloadTicket()">Descargar PDF</button>
+  <button class="ticket-dismiss" (click)="dismissTicket()">✕</button>
+</div>

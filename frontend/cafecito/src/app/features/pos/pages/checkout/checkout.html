@@ -1,0 +1,51 @@
+<section class="container">
+  <header class="d-flex justify-content-between align-items-center mb-2">
+    <h2>Cobro</h2>
+    <a class="link" routerLink="/pos">← Volver</a>
+  </header>
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="card p-3">
+        <h5>Resumen</h5>
+        <table class="table table-sm">
+          <tbody>
+            <tr><td>Artículos</td><td class="text-end">{{ pos.totalItems() }}</td></tr>
+            <tr><td>Subtotal</td><td class="text-end">{{ subtotal() | currency:'MXN' }}</td></tr>
+            <tr><td>IVA</td><td class="text-end">{{ taxes() | currency:'MXN' }}</td></tr>
+            <tr class="fw-bold"><td>Total</td><td class="text-end">{{ totalBeforeDiscount() | currency:'MXN' }}</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mb-2">
+          <label class="form-label">Descuento</label>
+          <input type="number" class="form-control" min="0" step="0.01"
+                 [ngModel]="discount()" (ngModelChange)="discount.set($event)"/>
+          <small class="text-muted">Total con descuento: <b>{{ total() | currency:'MXN' }}</b></small>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label">Notas</label>
+          <textarea rows="3" class="form-control"
+                    [ngModel]="notes()" (ngModelChange)="notes.set($event)"
+                    placeholder="Observaciones del cobro (opcional)"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card p-3">
+        <h5>Forma de pago</h5>
+        <select class="form-select mb-3" [ngModel]="paidWith()" (ngModelChange)="paidWith.set($event)">
+          <option *ngFor="let m of methods" [ngValue]="m">{{ m }}</option>
+        </select>
+
+        <div class="d-grid gap-2">
+          <button class="btn btn-primary" (click)="pay()" [disabled]="loading()">Confirmar pago</button>
+          <div *ngIf="error()" class="alert alert-danger mt-2">{{ error() }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+``

@@ -6,7 +6,7 @@ import { SearchBarComponent } from '../../components/search-bar/search-bar';
 import { PriceRangeComponent } from '../../components/price-range/price-range';
 import { ProductCardComponent } from '../../components/product-card/product-card';
 import { PaginatorComponent } from '../../components/paginator/paginator';
-import { ProductosService } from '../../../../core/services/productos.service';
+import { ProductosService } from '../../../../core/services/products.service';
 import { Producto } from '../../../../core/models/product.model';
 
 @Component({
@@ -24,7 +24,7 @@ import { Producto } from '../../../../core/models/product.model';
   styleUrls: ['./catalog-page.css']
 })
 export class CatalogPageComponent implements OnInit {
-  productos: Producto[] = [];
+  products: Producto[] = [];
   cargando = false;
 
   // Estado de filtros
@@ -58,7 +58,7 @@ export class CatalogPageComponent implements OnInit {
       })
       .subscribe({
         next: (res) => {
-          this.productos = res.data;
+          this.products = res.data;
           this.total = res.total;
           this.totalPages = res.totalPages;
           this.cargando = false;

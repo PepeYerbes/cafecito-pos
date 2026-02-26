@@ -7,8 +7,13 @@
     <span>Subtotal</span>
     <strong>$ {{ pos.subtotal() | number:'1.0-2' }}</strong>
   </div>
-  <!-- IVA/Descuentos se agregarán en el módulo de ventas -->
-  <button class="checkout" [disabled]="pos.items().length === 0" (click)="checkout.emit()">
-    Cobrar
-  </button>
+
+  <div class="d-grid gap-2 mt-2">
+    <button class="btn btn-outline-primary" [disabled]="pos.items().length === 0" (click)="sendToKitchen.emit()">
+      Enviar a cocina
+    </button>
+    <button class="btn btn-primary" [disabled]="pos.items().length === 0" (click)="checkout.emit()">
+      Cobrar
+    </button>
+  </div>
 </section>

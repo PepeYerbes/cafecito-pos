@@ -1,23 +1,24 @@
+// backend/src/routes/cash.js
 import { Router } from 'express';
 import * as cash from '../controllers/cash.controller.js';
 import { list as listSessions, closeSession as closeById } from '../modules/cashSessions/cashSessions.controller.js';
 import CashSession from '../models/CashSession.js';
+import { auth } from '../middlewares/auth.js';   // ← ajusta la ruta si tu middleware está en otro lugar
 
 const r = Router();
 
-// ⚠️ Importante: este router se monta en /api/cash (no duplicar /cash aquí)
-r.post('/register/open', cash.open);
-r.get('/register/current', cash.current);
-r.post('/register/movement', cash.movement);
+// ⚠️ Rutas estáticas SIEMPRE antes de las dinámicas (:id)
 
-// 🔁 Alias TEMPORAL de cierre para mantener compatibilidad con el FE actual.
-//     Busca la sesión OPEN y llama al cierre canónico de /api/sessions/:id/close.
-r.post('/register/close', async (req, res, next) => {
+r.post('/register/open',      auth, cash.open);
+r.get('/register/current',    auth, cash.current);
+r.post('/register/movement',  auth, cash.movement);
+r.get('/register/history',    auth, listSessions);
+
+// Alias de cierre
+r.post('/register/close', auth, async (req, res, next) => {
   try {
     const current = await CashSession.findOne({ status: 'OPEN' }).lean();
     if (!current) return res.status(400).json({ message: 'No hay sesión abierta' });
-
-    // Inyectamos el id en params y delegamos al controlador canónico
     req.params.id = String(current._id);
     return closeById(req, res, next);
   } catch (err) {
@@ -25,10 +26,7 @@ r.post('/register/close', async (req, res, next) => {
   }
 });
 
-// Reporte json/pdf (controlador original)
-r.get('/register/:id/report', cash.report);
-
-// Alias requerido por el frontend para el historial (usa módulo /sessions)
-r.get('/register/history', listSessions);
+// ✅ Reporte con auth — ruta dinámica al final
+r.get('/register/:id/report', auth, cash.report);
 
 export default r;
