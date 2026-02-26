@@ -1,10 +1,85 @@
 .cart { border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem; background: #fff; }
 .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
-.cart-list { display: flex; flex-direction: column; gap: 0.35rem; max-height: 40vh; overflow: auto; }
-.row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.5rem; align-items: center; }
-.info .name { font-weight: 600; color: var(--ink-black); }
-.qty { display: inline-flex; gap: 0.25rem; align-items: center; }
-.qty input { width: 3rem; text-align: center; }
-.remove { color: var(--danger); }
+.cart-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: 40vh; overflow: auto; }
+
+/* ✅ Cada ítem en bloque con dos filas */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.3rem 0.25rem;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+.row:last-child { border-bottom: none; }
+
+/* Fila 1: nombre + precio total */
+.row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* Fila 2: controles cantidad + nota + eliminar */
+.row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.info { min-width: 0; flex: 1; }
+.info .name {
+  font-weight: 600;
+  color: var(--ink-black);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+.info .price {
+  font-size: 11px;
+  color: var(--muted, #6b7280);
+}
+
+.row-total {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-black);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.qty {
+  display: inline-flex;
+  gap: 0.2rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+.qty input { width: 2.4rem; text-align: center; font-size: 13px; }
+.qty button { font-size: 13px; }
+
+.remove {
+  color: var(--danger);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Botón nota */
+.btn-note {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.note-text {
+  font-size: 11px;
+  color: var(--muted, #6b7280);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
 .clear { color: var(--primary); }
 .empty { color: var(--muted); text-align: center; padding: 0.5rem; }

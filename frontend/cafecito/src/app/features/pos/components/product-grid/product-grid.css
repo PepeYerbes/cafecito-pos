@@ -113,3 +113,42 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
+
+/* ✅ Tarjeta agotada: cursor bloqueado + opacidad reducida */
+.item.out-of-stock {
+  cursor: not-allowed;
+  opacity: 0.6;
+  position: relative;
+}
+
+.item.out-of-stock:hover {
+  /* Sin efecto hover para agotados */
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+/* Overlay semitransparente encima de la imagen */
+.sold-out-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sold-out-overlay span {
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

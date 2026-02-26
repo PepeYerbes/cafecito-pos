@@ -69,4 +69,12 @@ export class PosApiService {
   returnSale(saleId: string, items: CreateSaleItem[], reason: string) {
     return this.http.post<any>(`${this.base}/sales/${saleId}/return`, { items, reason });
   }
+
+  /** ✅ Descuento automático por lealtad */
+  getCustomerDiscount(customerId: string) {
+    return this.http.get<{
+      customerId: string; name: string;
+      visitsCount: number; discountPct: number; tier: string;
+    }>(`${this.base}/customers/${customerId}/discount`);
+  }
 }

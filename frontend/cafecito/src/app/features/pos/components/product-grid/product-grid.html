@@ -3,14 +3,15 @@
   <button
     class="item"
     *ngFor="let p of productos"
-    (click)="add.emit(p)"
-    [title]="p.nombre + ' — $' + p.precio">
+    (click)="tryAdd(p)"
+    [class.out-of-stock]="p.stock === 0"
+    [title]="p.stock === 0 ? p.nombre + ' — Agotado' : p.nombre + ' — $' + p.precio">
 
-    <!-- Imagen real si existe, placeholder con ícono de categoría si no -->
+    <!-- Imagen o placeholder -->
     <div class="product-img-wrap">
       <ng-container *ngIf="p.imageUrl; else iconPlaceholder">
         <img
-          [src]="p.imageUrl"
+          [src]="'http://localhost:3001' + p.imageUrl"
           [alt]="p.nombre"
           class="product-img"
           (error)="$any($event.target).style.display='none'; $any($event.target).nextElementSibling.style.display='flex'"
@@ -24,11 +25,17 @@
         <div class="product-img-placeholder">{{ getCategoryIcon(p.categoria) }}</div>
       </ng-template>
 
-      <!-- Badge de stock bajo -->
+      <!-- Badge stock bajo -->
       <span class="stock-badge" *ngIf="p.stock <= 5 && p.stock > 0">
         {{ p.stock }} left
       </span>
+      <!-- ✅ Badge agotado con overlay -->
       <span class="stock-badge out" *ngIf="p.stock === 0">Agotado</span>
+    </div>
+
+    <!-- ✅ Overlay gris para agotados -->
+    <div class="sold-out-overlay" *ngIf="p.stock === 0">
+      <span>Sin stock</span>
     </div>
 
     <div class="product-info">

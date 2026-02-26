@@ -219,6 +219,16 @@
         <span>👤 {{ c.name }}</span>
         <span class="customer-points">{{ c.points || 0 }} pts</span>
       </div>
+      <!-- ✅ Badge de descuento por lealtad -->
+      <div class="loyalty-badge" *ngIf="loyaltyPct() > 0">
+        <span class="loyalty-icon">⭐</span>
+        <span>{{ loyaltyTier() }}</span>
+        <strong>–{{ loyaltyPct() }}%</strong>
+        <span class="loyalty-amount">(–${{ discount() | number:'1.2-2' }})</span>
+      </div>
+      <div class="loyalty-badge loyalty-new" *ngIf="loyaltyPct() === 0">
+        <span>🆕 Cliente nuevo — sin descuento aún</span>
+      </div>
     </div>
 
     <!-- Notas -->
