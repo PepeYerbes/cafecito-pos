@@ -13,7 +13,8 @@ const orderSchema = new mongoose.Schema({
   sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'CashSession' },
   cashier:   { type: String, default: 'Sistema' },   // nombre del cajero
   items:     { type: [orderItemSchema], required: true },
-  status:    { type: String, enum: ['PENDING', 'DONE'], default: 'PENDING' },
+  ticket:  { type: String, default: '' },
+  status:  { type: String, enum: ['NEW','IN_PROGRESS','READY','DELIVERED','CANCELLED','PENDING','DONE'], default: 'NEW' },
   notes:     { type: String, default: '' }
 }, { timestamps: true });
 

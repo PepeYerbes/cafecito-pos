@@ -19,4 +19,3 @@ export interface ProductosResponse {
   total: number;
   totalPages: number;
 }
-``

@@ -20,8 +20,11 @@
       <span>Iniciar sesión</span>
     </div>
 
-    <!-- ── Form ── -->
-    <form (submit)="submit($event)" class="login-form" novalidate>
+    <!-- ── Form ──
+         method="post" evita que el navegador serialice campos en la URL.
+         (submit) + preventDefault() en TS maneja el envío real vía HTTP.
+    -->
+    <form method="post" (submit)="submit($event)" class="login-form" novalidate>
 
       <div class="field">
         <label for="email">Correo electrónico</label>
@@ -30,9 +33,8 @@
           <input
             id="email"
             type="email"
-            name="email"
             placeholder="usuario@cafecito.com"
-            autocomplete="email"
+            autocomplete="username"
             [ngModel]="email()"
             (ngModelChange)="email.set($event)"
             [ngModelOptions]="{standalone:true}"
@@ -48,7 +50,6 @@
           <input
             id="password"
             type="password"
-            name="password"
             placeholder="••••••••"
             autocomplete="current-password"
             [ngModel]="password()"
