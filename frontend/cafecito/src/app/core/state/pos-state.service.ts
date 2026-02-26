@@ -96,23 +96,31 @@ export class PosStateService {
   }
 
   setQty(productId: string, qty: number) {
-    if (qty < 0) qty = 0;
-    const arr = [...this._items()];
-    const idx = arr.findIndex(i => i.producto._id === productId);
+  if (qty < 0) qty = 0;
+  const arr = [...this._items()];
+  const idx = arr.findIndex(i => i.producto._id === productId);
 
-    if (idx >= 0) {
-      const name = arr[idx].producto.nombre;
-      if (qty === 0) {
-        arr.splice(idx, 1);
-        this.cartEvents$.next({ type: 'removed', name });
-      } else {
-        arr[idx] = { ...arr[idx], qty };
-        this.cartEvents$.next({ type: 'qty', name, qty });
-      }
-      this._items.set(arr);
-      if (!arr.length) this._focused.set(null);
+  if (idx >= 0) {
+    const item = arr[idx];
+    const name = item.producto.nombre;
+
+    // ✅ NUEVO: cap al stock disponible
+    if (qty > item.producto.stock) {
+      qty = item.producto.stock;
+      this.cartEvents$.next({ type: 'stock_limit', name, stock: item.producto.stock });
     }
+
+    if (qty === 0) {
+      arr.splice(idx, 1);
+      this.cartEvents$.next({ type: 'removed', name });
+    } else {
+      arr[idx] = { ...arr[idx], qty };
+      this.cartEvents$.next({ type: 'qty', name, qty });
+    }
+    this._items.set(arr);
+    if (!arr.length) this._focused.set(null);
   }
+}
 
   /** ✅ Actualiza la nota de un ítem — requerido por cart.ts */
   setNote(productId: string, note: string) {
